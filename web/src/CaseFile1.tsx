@@ -1,4 +1,4 @@
-import { PMD } from "./PmdPanel";
+import { PMD, verdict, verdictLabel } from "./PmdPanel";
 
 type T = { slope: number; lo: number; hi: number; p: number; n: number };
 type Nat = Record<string, T>;
@@ -6,8 +6,14 @@ type CellLite = { name: string; trends: Record<string, { slope: number } | null>
 type Series = Record<string, Record<string, Record<string, number>>>;
 
 const fmt = (x: number) => (x >= 0 ? "+" : "\u2212") + Math.abs(x).toFixed(2);
-const real = (t: T) => (t.lo > 0 || t.hi < 0) && t.p < 0.05;
 const YEARS = Array.from({ length: 45 }, (_, i) => 1981 + i);
+
+const gapText = (g: T) => {
+  const v = verdict(g);
+  if (v === "yes") return "The gap change is statistically significant: its range excludes zero and p is below 0.05.";
+  if (v === "inconclusive") return `The range of the gap excludes zero, but p is ${g.p.toFixed(3)}, not below 0.05, so the gap change is not conclusive.`;
+  return "The range of the gap includes zero, so the difference between them is not conclusive.";
+};
 
 function median(a: number[]) {
   const s = [...a].sort((x, y) => x - y);
@@ -79,7 +85,7 @@ export default function CaseFile1({ nat, cells, series }: { nat: Nat; cells: Cel
   const sentence = (sfx: string) => {
     const a = nat[`T2M_MAX|annual${sfx}`], b = nat[`T2M_MIN|annual${sfx}`], g = nat[`DTR|annual${sfx}`];
     if (!a || !b || !g) return "";
-    return `${b.slope > a.slope ? "The night low trend is higher than the daytime high trend" : "The daytime high trend is higher than the night low trend"}. The night low changed ${fmt(b.slope)} and the daytime high ${fmt(a.slope)} \u00B0C per decade. ${real(g) ? "The range of the gap excludes zero." : "The range of the gap includes zero, so the difference between them is not conclusive."}`;
+    return `${b.slope > a.slope ? "The night low trend is higher than the daytime high trend" : "The daytime high trend is higher than the night low trend"}. The night low changed ${fmt(b.slope)} and the daytime high ${fmt(a.slope)} \u00B0C per decade. ${gapText(g)}`;
   };
   const count = (sfx: string) => {
     const pairs = cells.flatMap((c) => {
@@ -122,7 +128,7 @@ export default function CaseFile1({ nat, cells, series }: { nat: Nat; cells: Cel
                     <td key={w.sfx} className="p-2">
                       {t ? `${fmt(t.slope)} (${fmt(t.lo)} to ${fmt(t.hi)}) \u00B0C` : ""}
                       <br />
-                      <span className="text-xs text-slate-600">{t ? (real(t) ? "statistically significant" : "not statistically significant") : ""}</span>
+                      <span className="text-xs text-slate-600">{t ? verdictLabel(t) : ""}</span>
                     </td>
                   );
                 })}

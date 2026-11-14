@@ -11,6 +11,20 @@ export const PMD = [
 const PMD_RAIN = "about 7.4 mm per decade decline, not statistically significant";
 const PMD_SPRING = 1.0;
 
+export type Verdict = "yes" | "inconclusive" | "no";
+type R = { lo: number; hi: number; p: number };
+// Same three way rule as the per place text in App.tsx: Yes, Not conclusive, No.
+export function verdict(t: R): Verdict {
+  if (!(t.lo > 0 || t.hi < 0)) return "no";
+  return t.p < 0.05 ? "yes" : "inconclusive";
+}
+export function verdictLabel(t: R): string {
+  const v = verdict(t);
+  if (v === "yes") return "statistically significant";
+  if (v === "inconclusive") return `not conclusive (range excludes zero, p ${t.p.toFixed(3)})`;
+  return "not statistically significant";
+}
+
 const fmt = (x: number) => (x >= 0 ? "+" : "\u2212") + Math.abs(x).toFixed(2);
 
 export default function PmdPanel({ nat, cells }: { nat: Nat; cells: CellLite[] }) {
@@ -39,7 +53,6 @@ export default function PmdPanel({ nat, cells }: { nat: Nat; cells: CellLite[] }
               const n = nat[`${r.id}|annual`];
               if (!n) return null;
               const inside = r.value >= n.lo && r.value <= n.hi;
-              const real = (n.lo > 0 || n.hi < 0) && n.p < 0.05;
               return (
                 <tr key={r.id} className="border-t border-slate-200 align-top">
                   <td className="p-2">{r.label}</td>
@@ -47,7 +60,7 @@ export default function PmdPanel({ nat, cells }: { nat: Nat; cells: CellLite[] }
                   <td className="p-2">{fmt(n.slope)} ({fmt(n.lo)} to {fmt(n.hi)}) {"\u00B0C"}</td>
                   <td className="p-2">
                     {inside ? "Consistent: the PMD value is inside the NASA range." : "Different: the PMD value is outside the NASA range."}{" "}
-                    {real ? "The NASA trend is statistically significant." : "The NASA trend is not statistically significant."}
+                    The NASA trend is {verdictLabel(n)}.
                   </td>
                 </tr>
               );
