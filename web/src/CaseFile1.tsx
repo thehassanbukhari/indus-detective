@@ -111,9 +111,9 @@ export default function CaseFile1({ nat, cells, series, breaks }: { nat: Nat; ce
         Is the night time low changing differently from the daytime high? National average of our 38 grid cells. The chart shows change from each line's own 1981 to 1990 average.
       </p>
       {bMin && bMax && (
-        <div className="mt-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-slate-800">
+        <div className="mt-2 rounded border border-sky-300 bg-sky-50 p-3 text-sm text-slate-800">
           <p className="font-semibold">
-            {mostlyJump ? `Read this first: the night low rise is mostly one jump near ${bMin.national.year}, not steady warming.` : "Read this first: the break check on the yearly series."}
+            {mostlyJump ? `How to read this chart: most of the night low rise is one step near ${bMin.national.year}, not steady warming.` : "How to read this chart: the yearly series and its level steps."}
           </p>
           <ul className="mt-1 list-disc space-y-1 pl-5">
             <li>{breakSentence(bMin, "Night time low")}</li>
@@ -170,11 +170,11 @@ export default function CaseFile1({ nat, cells, series, breaks }: { nat: Nat; ce
         })}
         {pmdMax && pmdMin && (
           <li>
-            PMD report (Sept 2026) as reported in press, 1981 to 2025: night low {fmt(pmdMin.value)}, daytime high {fmt(pmdMax.value)} {"\u00B0C"} per decade.
+            PMD report (2026) as reported in press, 1981 to 2025: night low {fmt(pmdMin.value)}, daytime high {fmt(pmdMax.value)} {"\u00B0C"} per decade.
           </li>
         )}
         <li>
-          A negative gap change means the gap between day and night is narrowing. This page shows what changed, not why. The cause of the level jump is not claimed, which is why the 1998 to 2025 view is shown next to the full period. Values are a 50 km reanalysis, not weather stations.
+          A negative gap change means the gap between day and night is narrowing. The 1998 to 2025 view is shown next to the full period because of the level step near 1997 to 1998. Values are a 50 km reanalysis, not weather stations.
         </li>
       </ul>
     </section>

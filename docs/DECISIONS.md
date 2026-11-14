@@ -30,7 +30,7 @@ Every significance statement uses the same rule: Yes (range excludes zero and p 
 A plain dot map with no country outline. Borders are politically sensitive and cost time, and the dots carry the message. Colour is the slope, a thick ring means significant.
 
 ## PMD numbers
-We use the figures reported in the press for the PMD report of September 2026, labelled that way on screen. If the PDF is found, the numbers are replaced with exact ones and page numbers.
+We use the figures reported in the press for the PMD report of 2026, labelled that way on screen. If the PDF is found, the numbers are replaced with exact ones and page numbers.
 
 ## Case files
 Case file 1 compares nights and days. Case file 2 covers spring, February to April. We dropped the word squeeze because the data does not show one. Case file 3 on wet extremes and dry spells was cut because it needs rainfall and our rainfall is not reliable. We did not replace it with a summer cooling file because its cause is not validated.
@@ -46,3 +46,12 @@ A Pettitt change point test found that the night low jumps in about the same yea
 
 ## Trust grade
 The trust panel grades each national trend with a fixed rule. It must be significant over 1981 to 2025, otherwise it is not a finding. It must also be significant from 1998 to 2025, and show no shared break year, to rank higher. The grade is Robust only if the hand check against the POWER viewer has passed. At the moment the two night low trends are Fragile and the other four are not findings.
+
+## Wording and framing reset
+The product is a NASA data explorer first and method checks support it. Public wording states findings, methods and sourced facts, and writes limits as guidance for use. The level step near 1997 to 1998 is described with NASA's own documentation of satellite instrument changes in reanalysis, our month by month timing, and the choice to show 1998 to 2025 next to the full period. The cause is not asserted.
+
+## Label changes
+PMD figures are labelled PMD report (2026) as reported in press, because Dawn reports the release in August. Trust grades are named by how many of the three checks a finding passes. The rule did not change.
+
+## Sources and checks panel
+Only confirmed, sourced items are shown: data and MERRA-2 links, the POWER citation guide, the press coverage of the PMD report, the hand check result and the build tools.

@@ -41,9 +41,9 @@ export default function CaseFile2({ nat, cells, series, breaks }: { nat: Nat; ce
         How is spring changing, and is it the days or the nights? National average of our 38 grid cells. The chart shows change from each line's own 1981 to 1990 average.
       </p>
       {bMin && bMax && (
-        <div className="mt-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-slate-800">
+        <div className="mt-2 rounded border border-sky-300 bg-sky-50 p-3 text-sm text-slate-800">
           <p className="font-semibold">
-            {mostlyJump ? `Read this first: the spring night low rise is mostly one jump near ${bMin.national.year}, not steady warming.` : "Read this first: the break check on the spring series."}
+            {mostlyJump ? `How to read this chart: most of the spring night low rise is one step near ${bMin.national.year}, not steady warming.` : "How to read this chart: the spring series and its level steps."}
           </p>
           <ul className="mt-1 list-disc space-y-1 pl-5">
             <li>{breakSentence(bMin, "Spring night time low")}</li>
@@ -102,14 +102,14 @@ export default function CaseFile2({ nat, cells, series, breaks }: { nat: Nat; ce
         })}
         {pmdMax && day.top && (
           <li>
-            PMD report (Sept 2026) as reported in press: Feb to Apr daytime high up to {PMD_SPRING.toFixed(0)} {"\u00B0C"} per decade in some areas. The steepest NASA place for the daytime high, {day.top.name}, shows {fmt(day.top.t.slope)} {"\u00B0C"}, which is {day.top.t.slope < PMD_SPRING ? "below" : "at or above"} that figure. A single steepest cell among 38 is a maximum, so its range is a loose guide.
+            PMD report (2026) as reported in press: Feb to Apr daytime high up to {PMD_SPRING.toFixed(0)} {"\u00B0C"} per decade in some areas. The steepest NASA place for the daytime high, {day.top.name}, shows {fmt(day.top.t.slope)} {"\u00B0C"}, which is {day.top.t.slope < PMD_SPRING ? "below" : "at or above"} that figure. A single steepest cell among 38 is a maximum, so its range is a loose guide.
           </li>
         )}
         <li>
-          National spring changes that pass the test, out of 3: {VARS.filter((r) => nat[`${r.id}|FMA`] && verdict(nat[`${r.id}|FMA`]) === "yes").length} in 1981 to 2025 and {VARS.filter((r) => nat[`${r.id}|FMA@1998`] && verdict(nat[`${r.id}|FMA@1998`]) === "yes").length} in 1998 to 2025. The cause of the level jump is not claimed, which is why both windows are shown.
+          National spring changes that pass the test, out of 3: {VARS.filter((r) => nat[`${r.id}|FMA`] && verdict(nat[`${r.id}|FMA`]) === "yes").length} in 1981 to 2025 and {VARS.filter((r) => nat[`${r.id}|FMA@1998`] && verdict(nat[`${r.id}|FMA@1998`]) === "yes").length} in 1998 to 2025. Both windows are shown because of the level step near 1997 to 1998.
         </li>
         <li>
-          This page shows what changed, not why. Values are a 50 km reanalysis, not weather stations.
+          Values are a 50 km reanalysis, not weather stations.
         </li>
       </ul>
     </section>

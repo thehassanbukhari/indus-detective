@@ -30,4 +30,4 @@ export function breakSentence(k: Brk, what: string): string {
 }
 
 export const CAUSE_NOTE =
-  "The same jump year in nearly every place fits a change in the data source or observing system, and it also fits a real regional shift. The cause is not claimed and is not verified.";
+  "NASA\u2019s reanalysis team documents that new satellite instruments entering the analysis can create level shifts in reanalysis series, and names an instrument change in 1998. In our data the step appears in nearly every place at once, between mid 1997 and early 1998 in a month by month scan, so trends since 1998 are shown next to the full period.";

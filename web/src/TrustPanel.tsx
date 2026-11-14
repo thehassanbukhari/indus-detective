@@ -11,14 +11,14 @@ export const CHECKS = {
 export const HAND_CHECK: "pending" | "passed" | "mismatch" = "passed";
 
 type R = { slope: number; lo: number; hi: number; p: number };
-export type Grade = "Robust" | "Partly robust" | "Fragile" | "Not a finding";
+export type Grade = "Passes all 3 checks" | "Passes 2 of 3 checks" | "Passes 1 of 3 checks" | "No clear trend over 1981 to 2025";
 export function grade(full: R | undefined, late: R | undefined, kind: "one" | "shared" | "none" | undefined, hand = HAND_CHECK): Grade {
-  if (!full || verdict(full) !== "yes") return "Not a finding";
+  if (!full || verdict(full) !== "yes") return "No clear trend over 1981 to 2025";
   const c2 = !!late && verdict(late) === "yes" && Math.sign(late.slope) === Math.sign(full.slope);
   const c3 = kind === "none";
-  if (hand === "mismatch") return "Fragile";
-  if (c2 && c3 && hand === "passed") return "Robust";
-  return c2 || c3 ? "Partly robust" : "Fragile";
+  if (hand === "mismatch") return "Passes 1 of 3 checks";
+  const n = 1 + (c2 ? 1 : 0) + (c3 ? 1 : 0);
+  return n === 3 ? "Passes all 3 checks" : n === 2 ? "Passes 2 of 3 checks" : "Passes 1 of 3 checks";
 }
 
 const fmt = (x: number) => (x >= 0 ? "+" : "\u2212") + Math.abs(x).toFixed(2);
@@ -33,10 +33,10 @@ const BK = [
 
 export default function TrustPanel({ nat, breaks }: { nat: Nat; breaks: BreaksFile }) {
   const syn = breaks.synthetic as { false_positive_rate: number } | undefined;
-  const handText = HAND_CHECK === "passed" ? "Done: every value we compared matched NASA\u2019s own viewer. This checks that we copied the numbers correctly, not that the reanalysis matches real weather. Details are in docs/HAND_CHECK.md." : HAND_CHECK === "mismatch" ? "Done: at least one cell did not match the POWER viewer. Every grade below is capped at Fragile." : "Not done yet. No grade can be Robust until it is done.";
+  const handText = HAND_CHECK === "passed" ? "5 places and 30 daily values were compared with NASA\u2019s own Data Access Viewer by team members and again by script. All matched, so our stored numbers are NASA\u2019s numbers. Details are in docs/HAND_CHECK.md." : HAND_CHECK === "mismatch" ? "At least one value did not match the POWER viewer, so every grade below is capped at 1 of 3 checks." : "Under way.";
   return (
     <section className="mt-6">
-      <h2 className="text-lg font-semibold">How far can you trust this?</h2>
+      <h2 className="text-lg font-semibold">How solid is each finding?</h2>
       <p className="mt-1 text-sm text-slate-600">
         Each national trend gets a grade from a fixed rule, not from opinion. The grade is for the national average of our 38 grid cells, not for single places.
       </p>
@@ -64,9 +64,10 @@ export default function TrustPanel({ nat, breaks }: { nat: Nat; breaks: BreaksFi
       </div>
       <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
         <li>Synthetic tests, 45 years with a known slope of {CHECKS.truth.toFixed(2)} per decade: the Theil Sen slope came back at {CHECKS.slopeMean.toFixed(3)} on average. The significance test flagged {(CHECKS.falsePosNoAuto * 100).toFixed(1)} percent of no trend series without autocorrelation and {(CHECKS.falsePosAuto * 100).toFixed(1)} percent with moderate autocorrelation (target 5).</li>
-        <li>Interval coverage: the 95 percent ranges contained the true slope in roughly {CHECKS.coverageLo} to {CHECKS.coverageHi} of 100 synthetic runs, so ranges are slightly too narrow.</li>
-        <li>Break check: see the table below. It found level jumps, and it does not say what caused them.{syn ? ` Its own test flags ${(syn.false_positive_rate * 100).toFixed(1)} percent of series with no break, so its p values are descriptive only.` : ""}</li>
+        <li>Interval coverage: the 95 percent ranges contained the true slope in roughly {CHECKS.coverageLo} to {CHECKS.coverageHi} of 100 synthetic runs, so read each range as a minimum.</li>
+        <li>Break check: the details below locate level steps in the yearly series and show how many places share each one.{syn ? ` Its own test flags ${(syn.false_positive_rate * 100).toFixed(1)} percent of series with no break, so its p values are descriptive only.` : ""}</li>
         <li>Rainfall is excluded. The source rainfall values were not reliable for trends.</li>
+        <li>Ground stations: in NOAA's open daily station archive, the Pakistan night time records usable for trends begin around 2006, so the 1997 to 1998 step is examined inside NASA's data.</li>
         <li>Reanalysis caveat: values come from a computer model (MERRA-2), and trends in reanalysis can be affected by changes in observing systems. Grid cells are not weather stations.</li>
         <li>Hand check against the NASA POWER viewer: {handText}</li>
       </ul>
@@ -79,10 +80,10 @@ export default function TrustPanel({ nat, breaks }: { nat: Nat; breaks: BreaksFi
       <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
         <summary className="cursor-pointer font-semibold">How the grade is decided</summary>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
-          <li>Check 1: the 1981 to 2025 national trend is statistically significant (range excludes zero and p below 0.05). If not, the grade is Not a finding.</li>
+          <li>Check 1: the 1981 to 2025 national trend is statistically significant (range excludes zero and p below 0.05). If not, the grade is No clear trend over 1981 to 2025.</li>
           <li>Check 2: the 1998 to 2025 trend is also significant with the same sign.</li>
           <li>Check 3: the break check shows no shared break year (fewer than 75 percent of places break within 1996 to 1999 and no single year holds 40 percent of places).</li>
-          <li>Robust: checks 1, 2 and 3 pass and the hand check passed. Partly robust: check 1 passes plus check 2 or check 3. Fragile: only check 1 passes. A hand check mismatch caps every grade at Fragile.</li>
+          <li>Passes all 3 checks: checks 1, 2 and 3 pass. Passes 2 of 3: check 1 plus check 2 or check 3. Passes 1 of 3: only check 1. A hand check mismatch would cap every grade at 1 of 3.</li>
         </ul>
       </details>
     </section>

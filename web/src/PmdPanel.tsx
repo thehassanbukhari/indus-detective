@@ -36,7 +36,7 @@ export default function PmdPanel({ nat, cells }: { nat: Nat; cells: CellLite[] }
     <section className="mt-6">
       <h2 className="text-lg font-semibold">Does NASA agree with Pakistan's weather service?</h2>
       <p className="mt-1 text-sm text-slate-600">
-        Change per decade, 1981 to 2025. PMD figures are labelled: PMD report (Sept 2026) as reported in press. They come from ground stations. The NASA figure is the average of our 38 grid cells.
+        Change per decade, 1981 to 2025. PMD figures are labelled: PMD report (2026) as reported in press. They come from ground stations. The NASA figure is the average of our 38 grid cells.
       </p>
       <div className="mt-2 overflow-x-auto rounded border border-slate-200">
         <table className="w-full text-left text-sm">
