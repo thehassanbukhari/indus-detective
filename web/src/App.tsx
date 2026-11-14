@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import PmdPanel, { type Nat } from "./PmdPanel";
+import PmdPanel, { type Nat, type Gist } from "./PmdPanel";
 import CaseFile1 from "./CaseFile1";
 import CaseFile2 from "./CaseFile2";
 import CaseFile3 from "./CaseFile3";
@@ -150,6 +150,7 @@ export default function App() {
   const [series, setSeries] = useState<Series | null>(null);
   const [nat, setNat] = useState<Nat | null>(null);
   const [breaks, setBreaks] = useState<BreaksFile | null>(null);
+  const [gist, setGist] = useState<Gist | null>(null);
   const [name, setName] = useState("Topi");
   const [v, setV] = useState("T2M");
   const [season, setSeason] = useState("annual");
@@ -165,6 +166,14 @@ export default function App() {
     ])
       .then(([c, s, n, b]) => { setCells(c); setSeries(s); setNat(n); setBreaks(b); })
       .catch((e) => setErr(String(e)));
+  }, []);
+
+  // GISTEMP is optional: if the file is missing or fails, the site loads without that row.
+  useEffect(() => {
+    fetch(base + "data/gistemp.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((g) => { if (g && g["T2M|annual"] && g["T2M|annual@1998"] && g.meta) setGist(g); })
+      .catch(() => {});
   }, []);
 
   if (err) return <p className="p-6">Could not load data: {err}</p>;
@@ -262,11 +271,11 @@ export default function App() {
       <CaseFile2 nat={nat} cells={cells} series={series} breaks={breaks} />
       <CaseFile3 nat={nat} cells={cells} series={series} breaks={breaks} />
 
-      <PmdPanel nat={nat} cells={cells} />
+      <PmdPanel nat={nat} cells={cells} gist={gist} />
 
       <TrustPanel nat={nat} breaks={breaks} />
 
-      <SourcesPanel />
+      <SourcesPanel gist={!!gist} />
 
       <details className="mt-6 rounded border border-slate-200 p-3 text-sm">
         <summary className="cursor-pointer font-semibold">About this data and its limits</summary>
