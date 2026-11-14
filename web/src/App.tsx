@@ -4,6 +4,7 @@ import CaseFile1 from "./CaseFile1";
 import CaseFile2 from "./CaseFile2";
 import TrustPanel from "./TrustPanel";
 import SourcesPanel from "./SourcesPanel";
+import Findings from "./Findings";
 import { brk, type BreaksFile } from "./breaks";
 
 type Trend = { slope: number; lo: number; hi: number; p: number; n: number; sig: boolean };
@@ -193,6 +194,8 @@ export default function App() {
         How has Pakistan's temperature changed since 1981? Daily NASA data, 38 places, 45 years.
       </p>
 
+      <Findings nat={nat} cells={cells} />
+
       <div className="mt-4 flex flex-wrap gap-3">
         <label className="text-sm">
           Place
@@ -230,7 +233,7 @@ export default function App() {
 
       <div className="mt-4 rounded border border-slate-200 p-2">
         <Chart years={years} vals={vals} slope={t ? t.slope : 0} x0={x0} />
-        <p className="px-2 text-xs text-slate-500">Yearly values (teal) and the straight line trend (red dashed), {win} to 2025.</p>
+        <p className="px-2 text-xs text-slate-500">Yearly values (teal) and the straight line trend (red dashed), {win} to 2025. The dashed line is a straight line fitted through the years, so it shows the overall direction.</p>
       </div>
 
       {t ? (
