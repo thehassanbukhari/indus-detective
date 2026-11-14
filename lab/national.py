@@ -43,4 +43,18 @@ for s in ("annual", "FMA"):
         yrs, hi_ = nat[("T2M_MAX", s, w)]
         _, lo_ = nat[("T2M_MIN", s, w)]
         record(f"DTR|{s}" if w == 1981 else f"DTR|{s}@1998", yrs, hi_ - lo_)
+# S2 step 1: JAS and DJF, added after the original keys so the random stream of the existing keys stays the same
+for v in ("T2M", "T2M_MAX", "T2M_MIN"):
+    for s in ("JAS", "DJF"):
+        k = f"{v}|{s}"
+        for w in (1981, 1998):
+            yrs = [y for y in YEARS if y >= w and all(str(y) in series[n][k] for n in series)]
+            y = np.array([np.mean([series[n][k][str(a)] for n in series]) for a in yrs])
+            nat[(v, s, w)] = (yrs, y)
+            record(k if w == 1981 else f"{k}@1998", yrs, y)
+for s in ("JAS", "DJF"):
+    for w in (1981, 1998):
+        yrs, hi_ = nat[("T2M_MAX", s, w)]
+        _, lo_ = nat[("T2M_MIN", s, w)]
+        record(f"DTR|{s}" if w == 1981 else f"DTR|{s}@1998", yrs, hi_ - lo_)
 pathlib.Path("data/build/national.json").write_text(json.dumps(out, separators=(",", ":")))
