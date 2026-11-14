@@ -57,6 +57,74 @@ function Chart({ years, vals, slope, x0 }: { years: number[]; vals: number[]; sl
   );
 }
 
+function mix(a: number[], b: number[], f: number) {
+  return a.map((x, i) => Math.round(x + (b[i] - x) * f));
+}
+const COLD = [37, 99, 235], MID = [241, 245, 249], HOT = [220, 38, 38];
+function slopeColor(s: number, lim: number) {
+  const c = mix(MID, s >= 0 ? HOT : COLD, Math.min(1, Math.abs(s) / lim));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+function DotMap({ cells, tkey, selected, onPick }: { cells: Cell[]; tkey: string; selected: string; onPick: (n: string) => void }) {
+  const W = 640, H = 600, ml = 40, mr = 12, mt = 12, mb = 28;
+  const LON0 = 60.5, LON1 = 77.5, LAT0 = 23.5, LAT1 = 37.5;
+  const sx = (lon: number) => ml + ((lon - LON0) / (LON1 - LON0)) * (W - ml - mr);
+  const sy = (lat: number) => H - mb - ((lat - LAT0) / (LAT1 - LAT0)) * (H - mt - mb);
+  const rows = cells.flatMap((c) => { const t = c.trends[tkey]; return t ? [{ c, t }] : []; });
+  if (!rows.length) return <p className="p-2 text-sm">Not enough years for this view.</p>;
+  const lim = Math.max(0.2, Math.ceil(Math.max(...rows.map((r) => Math.abs(r.t.slope))) * 10) / 10);
+  const up = rows.filter((r) => r.t.slope > 0).length;
+  const nsig = rows.filter((r) => r.t.sig).length;
+  const nsigUp = rows.filter((r) => r.t.sig && r.t.slope > 0).length;
+  const labelled = new Set(["Karachi", "Lahore", "Quetta", "Gilgit", "Islamabad", selected]);
+  const grid = (c: number[]) => c.map(String);
+  const gradient = `linear-gradient(to right, rgb(${COLD.join(",")}), rgb(${MID.join(",")}), rgb(${HOT.join(",")}))`;
+  return (
+    <div>
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Map of trend per grid cell">
+        {grid([65, 70, 75]).map((g) => (
+          <g key={"lon" + g}>
+            <line x1={sx(Number(g))} x2={sx(Number(g))} y1={mt} y2={H - mb} stroke="#e2e8f0" />
+            <text x={sx(Number(g))} y={H - 10} textAnchor="middle" fontSize="11" fill="#64748b">{g} E</text>
+          </g>
+        ))}
+        {grid([25, 30, 35]).map((g) => (
+          <g key={"lat" + g}>
+            <line x1={ml} x2={W - mr} y1={sy(Number(g))} y2={sy(Number(g))} stroke="#e2e8f0" />
+            <text x={ml - 6} y={sy(Number(g)) + 4} textAnchor="end" fontSize="11" fill="#64748b">{g} N</text>
+          </g>
+        ))}
+        {rows.map(({ c, t }) => {
+          const exc = t.lo > 0 || t.hi < 0;
+          return (
+            <g key={c.name} onClick={() => onPick(c.name)} style={{ cursor: "pointer" }}>
+              <title>{`${c.name}: ${fmt(t.slope)} \u00B0C per decade (${fmt(t.lo)} to ${fmt(t.hi)})${t.sig ? ", significant" : ""}`}</title>
+              {c.name === selected && <circle cx={sx(c.lon)} cy={sy(c.lat)} r={15} fill="none" stroke="#0f766e" strokeWidth={2} />}
+              <circle cx={sx(c.lon)} cy={sy(c.lat)} r={t.sig ? 9 : 7} fill={slopeColor(t.slope, lim)}
+                stroke={t.sig ? "#0f172a" : exc ? "#475569" : "#94a3b8"} strokeWidth={t.sig ? 3 : 1.2} />
+            </g>
+          );
+        })}
+        {rows.filter((r) => labelled.has(r.c.name)).map(({ c }) => (
+          <text key={"l" + c.name} x={sx(c.lon) + 12} y={sy(c.lat) + 4} fontSize="12" fill="#1e293b" style={{ pointerEvents: "none" }}>{c.name}</text>
+        ))}
+      </svg>
+      <div className="mx-2 mt-1 flex items-center gap-2 text-xs text-slate-600">
+        <span>{"\u2212"}{lim.toFixed(1)}</span>
+        <div className="h-3 flex-1 rounded" style={{ background: gradient }} />
+        <span>+{lim.toFixed(1)} {"\u00B0C"} per decade</span>
+      </div>
+      <p className="mx-2 mt-2 text-xs text-slate-600">
+        Big dot with a thick black ring: significant. Thin dark ring: the range excludes zero but it fails the strict test. Light ring: could be natural variation.
+      </p>
+      <p className="mx-2 mt-1 text-sm">
+        {rows.length} places: {up} rising, {rows.length - up} falling. {nsig} pass the strict test ({nsigUp} rising, {nsig - nsigUp} falling).
+      </p>
+    </div>
+  );
+}
+
 export default function App() {
   const [cells, setCells] = useState<Cell[] | null>(null);
   const [series, setSeries] = useState<Series | null>(null);
@@ -152,6 +220,16 @@ export default function App() {
       ) : (
         <p className="mt-4 text-sm">Not enough years for this view.</p>
       )}
+
+      <section className="mt-6">
+        <h2 className="text-lg font-semibold">Where is it changing?</h2>
+        <p className="mt-1 text-sm text-slate-600">
+          One dot per NASA grid cell, coloured by the trend for the variable, season and years chosen above. Tap a dot to open that place.
+        </p>
+        <div className="mt-2 rounded border border-slate-200 p-2">
+          <DotMap cells={cells} tkey={win === "1998" ? `${key}@1998` : key} selected={cell.name} onPick={setName} />
+        </div>
+      </section>
 
       <details className="mt-6 rounded border border-slate-200 p-3 text-sm">
         <summary className="cursor-pointer font-semibold">About this data and its limits</summary>
