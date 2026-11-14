@@ -35,7 +35,7 @@ function median(a: number[]) {
 }
 
 function Chart({ years, vals, slope, x0 }: { years: number[]; vals: number[]; slope: number; x0: number }) {
-  const W = 640, H = 320, ml = 52, mr = 16, mt = 16, mb = 32;
+  const W = 640, H = 320, ml = 60, mr = 16, mt = 34, mb = 36;
   const y0 = Math.min(...vals) - 0.3, y1 = Math.max(...vals) + 0.3;
   const sx = (x: number) => ml + ((x - x0) / (2025 - x0)) * (W - ml - mr);
   const sy = (y: number) => H - mb - ((y - y0) / (y1 - y0)) * (H - mt - mb);
@@ -49,13 +49,13 @@ function Chart({ years, vals, slope, x0 }: { years: number[]; vals: number[]; sl
       {yt.map((t) => (
         <g key={t}>
           <line x1={ml} x2={W - mr} y1={sy(t)} y2={sy(t)} stroke="#e2e8f0" />
-          <text x={ml - 6} y={sy(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{t.toFixed(1)}</text>
+          <text x={ml - 6} y={sy(t) + 4} textAnchor="end" fontSize="15" fill="#64748b">{t.toFixed(1)}</text>
         </g>
       ))}
       {xt.map((t) => (
-        <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="11" fill="#64748b">{t}</text>
+        <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="15" fill="#64748b">{t}</text>
       ))}
-      <text x={12} y={mt + 4} fontSize="11" fill="#64748b">{"\u00B0C"}</text>
+      <text x={ml - 6} y={16} textAnchor="end" fontSize="15" fill="#64748b">{"\u00B0C"}</text>
       <path d={line} fill="none" stroke="#0f766e" strokeWidth="2" />
       <line x1={sx(x0)} y1={sy(k * x0 + b)} x2={sx(2025)} y2={sy(k * 2025 + b)} stroke="#dc2626" strokeWidth="2" strokeDasharray="6 4" />
     </svg>
@@ -87,32 +87,44 @@ function DotMap({ cells, tkey, selected, onPick }: { cells: Cell[]; tkey: string
   const gradient = `linear-gradient(to right, rgb(${COLD.join(",")}), rgb(${MID.join(",")}), rgb(${HOT.join(",")}))`;
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Map of trend per grid cell">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Map of trend per grid cell" style={{ cursor: "pointer" }}
+        onClick={(e) => {
+          const r = e.currentTarget.getBoundingClientRect();
+          const x = ((e.clientX - r.left) * W) / r.width;
+          const y = ((e.clientY - r.top) * H) / r.height;
+          let best: string | null = null;
+          let bd = Infinity;
+          for (const { c } of rows) {
+            const d = Math.hypot(sx(c.lon) - x, sy(c.lat) - y);
+            if (d < bd) { bd = d; best = c.name; }
+          }
+          if (best && bd < 40) onPick(best);
+        }}>
         {grid([65, 70, 75]).map((g) => (
           <g key={"lon" + g}>
             <line x1={sx(Number(g))} x2={sx(Number(g))} y1={mt} y2={H - mb} stroke="#e2e8f0" />
-            <text x={sx(Number(g))} y={H - 10} textAnchor="middle" fontSize="11" fill="#64748b">{g} E</text>
+            <text x={sx(Number(g))} y={H - 10} textAnchor="middle" fontSize="14" fill="#64748b">{g} E</text>
           </g>
         ))}
         {grid([25, 30, 35]).map((g) => (
           <g key={"lat" + g}>
             <line x1={ml} x2={W - mr} y1={sy(Number(g))} y2={sy(Number(g))} stroke="#e2e8f0" />
-            <text x={ml - 6} y={sy(Number(g)) + 4} textAnchor="end" fontSize="11" fill="#64748b">{g} N</text>
+            <text x={ml - 6} y={sy(Number(g)) + 4} textAnchor="end" fontSize="14" fill="#64748b">{g} N</text>
           </g>
         ))}
         {rows.map(({ c, t }) => {
           const exc = t.lo > 0 || t.hi < 0;
           return (
-            <g key={c.name} onClick={() => onPick(c.name)} style={{ cursor: "pointer" }}>
+            <g key={c.name}>
               <title>{`${c.name}: ${fmt(t.slope)} \u00B0C per decade (${fmt(t.lo)} to ${fmt(t.hi)})${t.sig ? ", significant" : ""}`}</title>
               {c.name === selected && <circle cx={sx(c.lon)} cy={sy(c.lat)} r={15} fill="none" stroke="#0f766e" strokeWidth={2} />}
-              <circle cx={sx(c.lon)} cy={sy(c.lat)} r={t.sig ? 9 : 7} fill={slopeColor(t.slope, lim)}
+              <circle cx={sx(c.lon)} cy={sy(c.lat)} r={t.sig ? 10 : 8} fill={slopeColor(t.slope, lim)}
                 stroke={t.sig ? "#0f172a" : exc ? "#475569" : "#94a3b8"} strokeWidth={t.sig ? 3 : 1.2} />
             </g>
           );
         })}
         {rows.filter((r) => labelled.has(r.c.name)).map(({ c }) => (
-          <text key={"l" + c.name} x={sx(c.lon) + 12} y={sy(c.lat) + 4} fontSize="12" fill="#1e293b" style={{ pointerEvents: "none" }}>{c.name}</text>
+          <text key={"l" + c.name} x={sx(c.lon) + 12} y={sy(c.lat) + 4} fontSize="15" fill="#1e293b" style={{ pointerEvents: "none" }}>{c.name}</text>
         ))}
       </svg>
       <div className="mx-2 mt-1 flex items-center gap-2 text-xs text-slate-600">

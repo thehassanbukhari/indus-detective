@@ -34,7 +34,7 @@ export function national(series: Series, key: string) {
 type Line = { label: string; color: string; years: number[]; vals: number[]; slope: number };
 
 export function TwoLines({ lines, jumpYear, label = "Daytime high and night time low, national average change since 1981 to 1990" }: { lines: Line[]; jumpYear?: number; label?: string }) {
-  const W = 640, H = 320, ml = 52, mr = 16, mt = 16, mb = 32;
+  const W = 640, H = 320, ml = 60, mr = 16, mt = 34, mb = 36;
   const all = lines.flatMap((l) => l.vals);
   const y0 = Math.min(...all) - 0.3, y1 = Math.max(...all) + 0.3;
   const sx = (x: number) => ml + ((x - 1981) / (2025 - 1981)) * (W - ml - mr);
@@ -45,17 +45,17 @@ export function TwoLines({ lines, jumpYear, label = "Daytime high and night time
       {yt.map((t) => (
         <g key={t}>
           <line x1={ml} x2={W - mr} y1={sy(t)} y2={sy(t)} stroke="#e2e8f0" />
-          <text x={ml - 6} y={sy(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{fmt(t)}</text>
+          <text x={ml - 6} y={sy(t) + 4} textAnchor="end" fontSize="15" fill="#64748b">{fmt(t)}</text>
         </g>
       ))}
       {[1985, 1995, 2005, 2015, 2025].map((t) => (
-        <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="11" fill="#64748b">{t}</text>
+        <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="15" fill="#64748b">{t}</text>
       ))}
-      <text x={12} y={mt + 4} fontSize="11" fill="#64748b">{"\u00B0C"}</text>
+      <text x={ml - 6} y={16} textAnchor="end" fontSize="15" fill="#64748b">{"\u00B0C"}</text>
       {jumpYear !== undefined && (
         <>
           <line x1={sx(jumpYear - 0.5)} x2={sx(jumpYear - 0.5)} y1={mt} y2={H - mb} stroke="#94a3b8" strokeDasharray="3 3" />
-          <text x={sx(jumpYear - 0.5) + 4} y={mt + 10} fontSize="10" fill="#64748b">{`level jump near ${jumpYear}`}</text>
+          <text x={sx(jumpYear - 0.5) + 4} y={mt + 16} fontSize="13" fill="#64748b">{`level jump near ${jumpYear}`}</text>
         </>
       )}
       {lines.map((l) => {
