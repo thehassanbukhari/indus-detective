@@ -159,7 +159,7 @@ export default function App() {
           <li>Source: NASA POWER daily data, built from the MERRA-2 reanalysis, 1981 to 2025. A reanalysis is a computer model constrained by observations, so trends can be affected by changes in the observing systems.</li>
           <li>Each place is a grid cell about 50 km wide. It is not a weather station, and nothing here is a district level finding.</li>
           <li>Values are averages of daily highs, daily lows and daily means. Monthly extremes are not used.</li>
-          <li>Trend: Theil Sen slope with a 95% range from a block bootstrap. Tests in our own checks show these ranges are slightly too narrow (about 87 in 100 cover the truth, not 95).</li>
+          <li>Trend: Theil Sen slope with a 95% range from a block bootstrap. Tests in our own checks show these ranges are slightly too narrow (roughly 80 to 87 in 100 cover the truth, not 95).</li>
           <li>Significant means the change passes a test that accounts for many correlated years and for checking 38 places at once, and its range excludes zero.</li>
           <li>The national minimum temperature jumps up after 1997. We do not know why, so the 1998 to 2025 view is offered next to the full period.</li>
           <li>Rainfall is not shown. The rainfall values in this source looked implausible and shifted in recent years, so they are not reliable for trends.</li>
