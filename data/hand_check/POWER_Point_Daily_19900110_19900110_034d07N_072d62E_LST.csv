@@ -1,0 +1,13 @@
+-BEGIN HEADER-
+NASA/POWER Source Native Resolution Daily Data 
+Dates (month/day/year): 01/10/1990 through 01/10/1990 in LST
+Location: latitude  34.07   longitude 72.62 
+elevation from MERRA-2: Average for 0.5 x 0.625 degree lat/lon region = 451.02 meters
+The value for missing source data that cannot be computed or is outside of the sources availability range: -999 
+parameter(s): 
+T2M         MERRA-2 Temperature at 2 Meters (C) 
+T2M_MAX     MERRA-2 Temperature at 2 Meters Maximum (C) 
+T2M_MIN     MERRA-2 Temperature at 2 Meters Minimum (C) 
+-END HEADER-
+YEAR,DOY,T2M,T2M_MAX,T2M_MIN
+1990,10,12.8,20.28,8.51

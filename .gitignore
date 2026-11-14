@@ -30,3 +30,4 @@ lab/cache/
 .vscode/
 NEXT_PROMPT.txt
 web/*.log
+AGENTS.old.md

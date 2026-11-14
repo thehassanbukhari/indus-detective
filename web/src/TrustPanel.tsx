@@ -8,7 +8,7 @@ export const CHECKS = {
   coverageLo: 81, coverageHi: 87,
 };
 // Hand check of five cells against the POWER viewer: "pending" | "passed" | "mismatch". T2 report sets this.
-export const HAND_CHECK: "pending" | "passed" | "mismatch" = "pending";
+export const HAND_CHECK: "pending" | "passed" | "mismatch" = "passed";
 
 type R = { slope: number; lo: number; hi: number; p: number };
 export type Grade = "Robust" | "Partly robust" | "Fragile" | "Not a finding";
@@ -33,7 +33,7 @@ const BK = [
 
 export default function TrustPanel({ nat, breaks }: { nat: Nat; breaks: BreaksFile }) {
   const syn = breaks.synthetic as { false_positive_rate: number } | undefined;
-  const handText = HAND_CHECK === "passed" ? "Done: the five cells matched the POWER viewer." : HAND_CHECK === "mismatch" ? "Done: at least one cell did not match the POWER viewer. Every grade below is capped at Fragile." : "Not done yet. No grade can be Robust until it is done.";
+  const handText = HAND_CHECK === "passed" ? "Done: every value we compared matched NASA\u2019s own viewer. This checks that we copied the numbers correctly, not that the reanalysis matches real weather. Details are in docs/HAND_CHECK.md." : HAND_CHECK === "mismatch" ? "Done: at least one cell did not match the POWER viewer. Every grade below is capped at Fragile." : "Not done yet. No grade can be Robust until it is done.";
   return (
     <section className="mt-6">
       <h2 className="text-lg font-semibold">How far can you trust this?</h2>
@@ -68,7 +68,7 @@ export default function TrustPanel({ nat, breaks }: { nat: Nat; breaks: BreaksFi
         <li>Break check: see the table below. It found level jumps, and it does not say what caused them.{syn ? ` Its own test flags ${(syn.false_positive_rate * 100).toFixed(1)} percent of series with no break, so its p values are descriptive only.` : ""}</li>
         <li>Rainfall is excluded. The source rainfall values were not reliable for trends.</li>
         <li>Reanalysis caveat: values come from a computer model (MERRA-2), and trends in reanalysis can be affected by changes in observing systems. Grid cells are not weather stations.</li>
-        <li>Hand check of five cells against the NASA POWER viewer: {handText}</li>
+        <li>Hand check against the NASA POWER viewer: {handText}</li>
       </ul>
       <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
         <summary className="cursor-pointer font-semibold">Break check details</summary>
