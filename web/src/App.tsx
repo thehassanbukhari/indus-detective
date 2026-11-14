@@ -166,7 +166,7 @@ export default function App() {
   }, []);
 
   if (err) return <p className="p-6">Could not load data: {err}</p>;
-  if (!cells || !series || !nat || !breaks) return <p className="p-6">Loading</p>;
+  if (!cells || !series || !nat || !breaks) return <p className="p-6">Loading NASA data</p>;
 
   const cell = cells.find((c) => c.name === name) ?? cells[0];
   const key = `${v}|${season}`;
