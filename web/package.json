@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "sync-data": "mkdir -p public/data && cp ../data/build/trends.json ../data/build/series.json public/data/",
+    "sync-data": "if [ -d ../data/build ]; then mkdir -p public/data && cp ../data/build/trends.json ../data/build/series.json public/data/; fi",
     "dev": "npm run sync-data && vite",
     "build": "npm run sync-data && vite build",
     "check": "tsc --noEmit"
