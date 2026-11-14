@@ -3,7 +3,7 @@ type T = { slope: number; lo: number; hi: number; p: number; n: number };
 export type Nat = Record<string, T>;
 type CellLite = { name: string; trends: Record<string, { slope: number } | null> };
 
-const PMD = [
+export const PMD = [
   { id: "T2M_MAX", label: "Daytime high", value: 0.2 },
   { id: "T2M_MIN", label: "Night time low", value: 0.26 },
   { id: "T2M", label: "Average temperature", value: 0.21 },

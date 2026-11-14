@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import PmdPanel, { type Nat } from "./PmdPanel";
+import CaseFile1 from "./CaseFile1";
 
 type Trend = { slope: number; lo: number; hi: number; p: number; n: number; sig: boolean };
 type Cell = { name: string; aliases: string[]; lat: number; lon: number; trends: Record<string, Trend | null> };
@@ -233,6 +234,8 @@ export default function App() {
           <DotMap cells={cells} tkey={win === "1998" ? `${key}@1998` : key} selected={cell.name} onPick={setName} />
         </div>
       </section>
+
+      <CaseFile1 nat={nat} cells={cells} series={series} />
 
       <PmdPanel nat={nat} cells={cells} />
 
