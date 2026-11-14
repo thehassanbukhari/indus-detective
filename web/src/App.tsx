@@ -204,6 +204,10 @@ export default function App() {
         How has Pakistan's temperature changed since 1981? Daily NASA data, 38 places, 45 years.
       </p>
 
+      <p className="mt-4 max-w-2xl leading-relaxed text-slate-700">
+        We asked whether Pakistan's temperature has really changed since 1981. We used daily NASA MERRA-2 data for {cells.length} places{gist ? ", and NASA GISTEMP, a second NASA analysis built from weather stations and sea surface temperature, as a cross check for average temperature" : ""}. For each place we measured the change per decade and tested whether it is statistically significant. Then we compared the results with Pakistan's weather service (PMD).
+      </p>
+
       <Findings nat={nat} cells={cells} />
 
       <div className="mt-4 flex flex-wrap gap-3">
