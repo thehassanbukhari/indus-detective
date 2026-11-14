@@ -46,7 +46,7 @@ def boot_ci(y, x, B=1000, L=5):
 
 def trend(ser):
     yrs = np.array(sorted(ser)); y = np.array([ser[a] for a in yrs])
-    if len(y) < 30: return None
+    if len(y) < 25: return None
     s, lo, hi = boot_ci(y, yrs.astype(float))
     p = mk.pre_whitening_modification_test(y).p
     return dict(slope=float(s * 10), lo=float(lo * 10), hi=float(hi * 10), p=float(1.0 if np.isnan(p) else p), n=int(len(y)))
@@ -76,9 +76,10 @@ for c in cells:
         for s in SEASONS:
             ser = seasonal(c["m"][v], s)
             c["series"][f"{v}|{s}"] = ser; c["trends"][f"{v}|{s}"] = trend(ser)
+            c["trends"][f"{v}|{s}@1998"] = trend({y: x for y, x in ser.items() if y >= 1998})
 
 for v in VARS:
-    for s in SEASONS:
+    for s in list(SEASONS) + [x + "@1998" for x in SEASONS]:
         k = f"{v}|{s}"
         idx = [i for i, c in enumerate(cells) if c["trends"][k]]
         sig = bh([cells[i]["trends"][k]["p"] for i in idx])
@@ -89,7 +90,7 @@ for v in VARS:
 
 meta = [dict(name=c["name"], aliases=c["aliases"], lat=c["lat"], lon=c["lon"], cell_elev_m=c["elev"], trends=c["trends"]) for c in cells]
 (out / "trends.json").write_text(json.dumps(meta, separators=(",", ":")))
-ser_out = {c["name"]: {k: {str(y): round(x, 3) for y, x in v.items()} for k, v in c["series"].items() if k.endswith("|annual")} for c in cells}
+ser_out = {c["name"]: {k: {str(y): round(x, 3) for y, x in v.items()} for k, v in c["series"].items()} for c in cells}
 (out / "series.json").write_text(json.dumps(ser_out, separators=(",", ":")))
 
 print("-----------------OUTPUT----------------")

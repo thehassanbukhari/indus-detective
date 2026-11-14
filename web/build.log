@@ -1,0 +1,18 @@
+
+> indus-detective-web@0.0.0 build
+> npm run sync-data && vite build
+
+
+> indus-detective-web@0.0.0 sync-data
+> if [ -d ../data/build ]; then mkdir -p public/data && cp ../data/build/trends.json ../data/build/series.json public/data/; fi
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 16 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.40 kB │ gzip:  0.27 kB
+dist/assets/index-BrTKPtgO.css    6.94 kB │ gzip:  2.21 kB
+dist/assets/index-DETXnxN9.js   226.97 kB │ gzip: 71.38 kB
+
+✓ built in 172ms

@@ -5,9 +5,19 @@ type Cell = { name: string; aliases: string[]; lat: number; lon: number; trends:
 type Series = Record<string, Record<string, Record<string, number>>>;
 
 const VARS = [
-  { id: "T2M", label: "Average temperature", def: "The daily mean air temperature 2 metres above the ground, averaged over the year." },
-  { id: "T2M_MAX", label: "Daytime high", def: "The daily highest air temperature, averaged over the year. It describes days." },
-  { id: "T2M_MIN", label: "Night time low", def: "The daily lowest air temperature, averaged over the year. It describes nights." },
+  { id: "T2M", label: "Average temperature", def: "The daily mean air temperature 2 metres above the ground." },
+  { id: "T2M_MAX", label: "Daytime high", def: "The daily highest air temperature. It describes days." },
+  { id: "T2M_MIN", label: "Night time low", def: "The daily lowest air temperature. It describes nights." },
+];
+const SEASONS = [
+  { id: "annual", label: "Whole year" },
+  { id: "FMA", label: "Feb to Apr (spring)" },
+  { id: "JAS", label: "Jul to Sep (monsoon season)" },
+  { id: "DJF", label: "Dec to Feb (winter)" },
+];
+const WINDOWS = [
+  { id: "1981", label: "1981 to 2025" },
+  { id: "1998", label: "1998 to 2025" },
 ];
 
 const base = import.meta.env.BASE_URL;
@@ -19,15 +29,16 @@ function median(a: number[]) {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-function Chart({ years, vals, slope }: { years: number[]; vals: number[]; slope: number }) {
+function Chart({ years, vals, slope, x0 }: { years: number[]; vals: number[]; slope: number; x0: number }) {
   const W = 640, H = 320, ml = 52, mr = 16, mt = 16, mb = 32;
   const y0 = Math.min(...vals) - 0.3, y1 = Math.max(...vals) + 0.3;
-  const sx = (x: number) => ml + ((x - 1981) / (2025 - 1981)) * (W - ml - mr);
+  const sx = (x: number) => ml + ((x - x0) / (2025 - x0)) * (W - ml - mr);
   const sy = (y: number) => H - mb - ((y - y0) / (y1 - y0)) * (H - mt - mb);
   const k = slope / 10;
   const b = median(vals.map((v, i) => v - k * years[i]));
   const line = years.map((x, i) => `${i ? "L" : "M"}${sx(x).toFixed(1)},${sy(vals[i]).toFixed(1)}`).join(" ");
   const yt = Array.from({ length: 5 }, (_, i) => y0 + ((y1 - y0) * i) / 4);
+  const xt = x0 === 1981 ? [1985, 1995, 2005, 2015, 2025] : [2000, 2005, 2010, 2015, 2020, 2025];
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
       {yt.map((t) => (
@@ -36,12 +47,12 @@ function Chart({ years, vals, slope }: { years: number[]; vals: number[]; slope:
           <text x={ml - 6} y={sy(t) + 4} textAnchor="end" fontSize="11" fill="#64748b">{t.toFixed(1)}</text>
         </g>
       ))}
-      {[1985, 1995, 2005, 2015, 2025].map((t) => (
+      {xt.map((t) => (
         <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="11" fill="#64748b">{t}</text>
       ))}
       <text x={12} y={mt + 4} fontSize="11" fill="#64748b">{"\u00B0C"}</text>
       <path d={line} fill="none" stroke="#0f766e" strokeWidth="2" />
-      <line x1={sx(1981)} y1={sy(k * 1981 + b)} x2={sx(2025)} y2={sy(k * 2025 + b)} stroke="#dc2626" strokeWidth="2" strokeDasharray="6 4" />
+      <line x1={sx(x0)} y1={sy(k * x0 + b)} x2={sx(2025)} y2={sy(k * 2025 + b)} stroke="#dc2626" strokeWidth="2" strokeDasharray="6 4" />
     </svg>
   );
 }
@@ -51,6 +62,8 @@ export default function App() {
   const [series, setSeries] = useState<Series | null>(null);
   const [name, setName] = useState("Topi");
   const [v, setV] = useState("T2M");
+  const [season, setSeason] = useState("annual");
+  const [win, setWin] = useState("1981");
   const [err, setErr] = useState("");
 
   useEffect(() => {
@@ -66,11 +79,21 @@ export default function App() {
   if (!cells || !series) return <p className="p-6">Loading</p>;
 
   const cell = cells.find((c) => c.name === name) ?? cells[0];
-  const t = cell.trends[`${v}|annual`];
-  const raw = series[cell.name][`${v}|annual`];
-  const years = Object.keys(raw).map(Number).sort((a, b) => a - b);
+  const key = `${v}|${season}`;
+  const t = cell.trends[win === "1998" ? `${key}@1998` : key];
+  const raw = series[cell.name][key];
+  const x0 = Number(win);
+  const years = Object.keys(raw).map(Number).filter((y) => y >= x0).sort((a, b) => a - b);
   const vals = years.map((y) => raw[String(y)]);
   const vinfo = VARS.find((x) => x.id === v)!;
+  const sinfo = SEASONS.find((x) => x.id === season)!;
+  const excludesZero = t ? t.lo > 0 || t.hi < 0 : false;
+  const sigText = !t ? "" : t.sig
+    ? "Yes. It passes the strict test used when many places are compared at once."
+    : excludesZero
+      ? "Not conclusive. The range excludes zero, but the change does not pass the strict test used when many places are compared at once."
+      : "No. The change could be natural variation.";
+  const sel = "ml-2 rounded border border-slate-300 p-1";
 
   return (
     <main className="mx-auto max-w-3xl p-4 text-slate-800">
@@ -82,7 +105,7 @@ export default function App() {
       <div className="mt-4 flex flex-wrap gap-3">
         <label className="text-sm">
           Place
-          <select className="ml-2 rounded border border-slate-300 p-1" value={cell.name} onChange={(e) => setName(e.target.value)}>
+          <select className={sel} value={cell.name} onChange={(e) => setName(e.target.value)}>
             {cells.map((c) => (
               <option key={c.name} value={c.name}>
                 {c.name}{c.aliases.length ? ` (also ${c.aliases.join(", ")})` : ""}
@@ -92,30 +115,58 @@ export default function App() {
         </label>
         <label className="text-sm">
           Variable
-          <select className="ml-2 rounded border border-slate-300 p-1" value={v} onChange={(e) => setV(e.target.value)}>
+          <select className={sel} value={v} onChange={(e) => setV(e.target.value)}>
             {VARS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
           </select>
         </label>
+        <label className="text-sm">
+          Season
+          <select className={sel} value={season} onChange={(e) => setSeason(e.target.value)}>
+            {SEASONS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+          </select>
+        </label>
+        <label className="text-sm">
+          Years
+          <select className={sel} value={win} onChange={(e) => setWin(e.target.value)}>
+            {WINDOWS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+          </select>
+        </label>
       </div>
-      <p className="mt-2 text-sm text-slate-600">{vinfo.def}</p>
-
-      <div className="mt-4 rounded border border-slate-200 p-2">
-        <Chart years={years} vals={vals} slope={t ? t.slope : 0} />
-        <p className="px-2 text-xs text-slate-500">Yearly average (teal) and the straight line trend (red dashed), 1981 to 2025.</p>
-      </div>
-
-      {t && (
-        <dl className="mt-4 grid gap-2 text-sm">
-          <div><dt className="inline font-semibold">What: </dt><dd className="inline">{vinfo.label} change over time.</dd></div>
-          <div><dt className="inline font-semibold">Where: </dt><dd className="inline">NASA grid cell around {cell.lat.toFixed(2)} N, {cell.lon.toFixed(2)} E, about 50 km wide. It is not a weather station.</dd></div>
-          <div><dt className="inline font-semibold">How much: </dt><dd className="inline">{fmt(t.slope)} {"\u00B0C"} per decade (95% interval {fmt(t.lo)} to {fmt(t.hi)}).</dd></div>
-          <div><dt className="inline font-semibold">Significant: </dt><dd className="inline">{t.sig ? "Yes, after correcting for testing many places at once." : "No. The change could be natural variation."}</dd></div>
-        </dl>
+      <p className="mt-2 text-sm text-slate-600">{vinfo.def} Each point is the average for {sinfo.label.toLowerCase()} of one year.</p>
+      {win === "1998" && (
+        <p className="mt-1 text-xs text-slate-500">This view starts after a level jump around 1997 that appears in the national series, so the jump does not count as a trend.</p>
       )}
 
-      <p className="mt-6 text-xs text-slate-500">
-        Data: NASA POWER, built from the MERRA-2 reanalysis. Reanalysis trends can be affected by changes in the observing systems. Rainfall is not shown because the source is not reliable for trends.
-      </p>
+      <div className="mt-4 rounded border border-slate-200 p-2">
+        <Chart years={years} vals={vals} slope={t ? t.slope : 0} x0={x0} />
+        <p className="px-2 text-xs text-slate-500">Yearly values (teal) and the straight line trend (red dashed), {win} to 2025.</p>
+      </div>
+
+      {t ? (
+        <dl className="mt-4 grid gap-2 text-sm">
+          <div><dt className="inline font-semibold">What: </dt><dd className="inline">{vinfo.label} change over time, {sinfo.label.toLowerCase()}.</dd></div>
+          <div><dt className="inline font-semibold">Where: </dt><dd className="inline">NASA grid cell around {cell.lat.toFixed(2)} N, {cell.lon.toFixed(2)} E, about 50 km wide. It is not a weather station.</dd></div>
+          <div><dt className="inline font-semibold">How much: </dt><dd className="inline">{fmt(t.slope)} {"\u00B0C"} per decade (95% range {fmt(t.lo)} to {fmt(t.hi)}).</dd></div>
+          <div><dt className="inline font-semibold">Significant: </dt><dd className="inline">{sigText}</dd></div>
+        </dl>
+      ) : (
+        <p className="mt-4 text-sm">Not enough years for this view.</p>
+      )}
+
+      <details className="mt-6 rounded border border-slate-200 p-3 text-sm">
+        <summary className="cursor-pointer font-semibold">About this data and its limits</summary>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
+          <li>Source: NASA POWER daily data, built from the MERRA-2 reanalysis, 1981 to 2025. A reanalysis is a computer model constrained by observations, so trends can be affected by changes in the observing systems.</li>
+          <li>Each place is a grid cell about 50 km wide. It is not a weather station, and nothing here is a district level finding.</li>
+          <li>Values are averages of daily highs, daily lows and daily means. Monthly extremes are not used.</li>
+          <li>Trend: Theil Sen slope with a 95% range from a block bootstrap. Tests in our own checks show these ranges are slightly too narrow (about 87 in 100 cover the truth, not 95).</li>
+          <li>Significant means the change passes a test that accounts for many correlated years and for checking 38 places at once, and its range excludes zero.</li>
+          <li>The national minimum temperature jumps up after 1997. We do not know why, so the 1998 to 2025 view is offered next to the full period.</li>
+          <li>Rainfall is not shown. The rainfall values in this source looked implausible and shifted in recent years, so they are not reliable for trends.</li>
+        </ul>
+      </details>
+
+      <p className="mt-4 text-xs text-slate-500">Data: NASA POWER (MERRA-2). Prototype built for NASA Space Apps Challenge 2026.</p>
     </main>
   );
 }
