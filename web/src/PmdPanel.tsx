@@ -9,7 +9,7 @@ export const PMD = [
   { id: "T2M", label: "Average temperature", value: 0.21 },
 ];
 const PMD_RAIN = "about 7.4 mm per decade decline, not statistically significant";
-const PMD_SPRING = 1.0;
+export const PMD_SPRING = 1.0;
 
 export type Verdict = "yes" | "inconclusive" | "no";
 type R = { lo: number; hi: number; p: number };

@@ -21,7 +21,7 @@ function median(a: number[]) {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
-function national(series: Series, key: string) {
+export function national(series: Series, key: string) {
   const names = Object.keys(series);
   const years = YEARS.filter((y) => names.every((n) => series[n][key]?.[String(y)] !== undefined));
   const vals = years.map((y) => names.reduce((a, n) => a + series[n][key][String(y)], 0) / names.length);
@@ -32,7 +32,7 @@ function national(series: Series, key: string) {
 
 type Line = { label: string; color: string; years: number[]; vals: number[]; slope: number };
 
-function TwoLines({ lines }: { lines: Line[] }) {
+export function TwoLines({ lines, jump = true, label = "Daytime high and night time low, national average change since 1981 to 1990" }: { lines: Line[]; jump?: boolean; label?: string }) {
   const W = 640, H = 320, ml = 52, mr = 16, mt = 16, mb = 32;
   const all = lines.flatMap((l) => l.vals);
   const y0 = Math.min(...all) - 0.3, y1 = Math.max(...all) + 0.3;
@@ -40,7 +40,7 @@ function TwoLines({ lines }: { lines: Line[] }) {
   const sy = (y: number) => H - mb - ((y - y0) / (y1 - y0)) * (H - mt - mb);
   const yt = Array.from({ length: 5 }, (_, i) => y0 + ((y1 - y0) * i) / 4);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Daytime high and night time low, national average change since 1981 to 1990">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={label}>
       {yt.map((t) => (
         <g key={t}>
           <line x1={ml} x2={W - mr} y1={sy(t)} y2={sy(t)} stroke="#e2e8f0" />
@@ -51,8 +51,12 @@ function TwoLines({ lines }: { lines: Line[] }) {
         <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="11" fill="#64748b">{t}</text>
       ))}
       <text x={12} y={mt + 4} fontSize="11" fill="#64748b">{"\u00B0C"}</text>
-      <line x1={sx(1997.5)} x2={sx(1997.5)} y1={mt} y2={H - mb} stroke="#94a3b8" strokeDasharray="3 3" />
-      <text x={sx(1997.5) + 4} y={mt + 10} fontSize="10" fill="#64748b">level jump around 1997</text>
+      {jump && (
+        <>
+          <line x1={sx(1997.5)} x2={sx(1997.5)} y1={mt} y2={H - mb} stroke="#94a3b8" strokeDasharray="3 3" />
+          <text x={sx(1997.5) + 4} y={mt + 10} fontSize="10" fill="#64748b">level jump around 1997</text>
+        </>
+      )}
       {lines.map((l) => {
         const k = l.slope / 10;
         const b = median(l.vals.map((v, i) => v - k * l.years[i]));

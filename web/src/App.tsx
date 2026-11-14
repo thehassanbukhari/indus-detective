@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import PmdPanel, { type Nat } from "./PmdPanel";
 import CaseFile1 from "./CaseFile1";
+import CaseFile2 from "./CaseFile2";
 
 type Trend = { slope: number; lo: number; hi: number; p: number; n: number; sig: boolean };
 type Cell = { name: string; aliases: string[]; lat: number; lon: number; trends: Record<string, Trend | null> };
@@ -236,6 +237,7 @@ export default function App() {
       </section>
 
       <CaseFile1 nat={nat} cells={cells} series={series} />
+      <CaseFile2 nat={nat} cells={cells} series={series} />
 
       <PmdPanel nat={nat} cells={cells} />
 
