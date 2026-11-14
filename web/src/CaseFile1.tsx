@@ -1,4 +1,5 @@
 import { PMD, verdict, verdictLabel } from "./PmdPanel";
+import { brk, breakKind, breakSentence, CAUSE_NOTE, type BreaksFile } from "./breaks";
 
 type T = { slope: number; lo: number; hi: number; p: number; n: number };
 type Nat = Record<string, T>;
@@ -32,7 +33,7 @@ export function national(series: Series, key: string) {
 
 type Line = { label: string; color: string; years: number[]; vals: number[]; slope: number };
 
-export function TwoLines({ lines, jump = true, label = "Daytime high and night time low, national average change since 1981 to 1990" }: { lines: Line[]; jump?: boolean; label?: string }) {
+export function TwoLines({ lines, jumpYear, label = "Daytime high and night time low, national average change since 1981 to 1990" }: { lines: Line[]; jumpYear?: number; label?: string }) {
   const W = 640, H = 320, ml = 52, mr = 16, mt = 16, mb = 32;
   const all = lines.flatMap((l) => l.vals);
   const y0 = Math.min(...all) - 0.3, y1 = Math.max(...all) + 0.3;
@@ -51,10 +52,10 @@ export function TwoLines({ lines, jump = true, label = "Daytime high and night t
         <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="11" fill="#64748b">{t}</text>
       ))}
       <text x={12} y={mt + 4} fontSize="11" fill="#64748b">{"\u00B0C"}</text>
-      {jump && (
+      {jumpYear !== undefined && (
         <>
-          <line x1={sx(1997.5)} x2={sx(1997.5)} y1={mt} y2={H - mb} stroke="#94a3b8" strokeDasharray="3 3" />
-          <text x={sx(1997.5) + 4} y={mt + 10} fontSize="10" fill="#64748b">level jump around 1997</text>
+          <line x1={sx(jumpYear - 0.5)} x2={sx(jumpYear - 0.5)} y1={mt} y2={H - mb} stroke="#94a3b8" strokeDasharray="3 3" />
+          <text x={sx(jumpYear - 0.5) + 4} y={mt + 10} fontSize="10" fill="#64748b">{`level jump near ${jumpYear}`}</text>
         </>
       )}
       {lines.map((l) => {
@@ -72,7 +73,7 @@ export function TwoLines({ lines, jump = true, label = "Daytime high and night t
   );
 }
 
-export default function CaseFile1({ nat, cells, series }: { nat: Nat; cells: CellLite[]; series: Series }) {
+export default function CaseFile1({ nat, cells, series, breaks }: { nat: Nat; cells: CellLite[]; series: Series; breaks: BreaksFile }) {
   const mx = nat["T2M_MAX|annual"], mn = nat["T2M_MIN|annual"];
   if (!mx || !mn) return null;
   const dMax = national(series, "T2M_MAX|annual");
@@ -98,6 +99,10 @@ export default function CaseFile1({ nat, cells, series }: { nat: Nat; cells: Cel
     });
     return { k: pairs.filter(Boolean).length, m: pairs.length };
   };
+  const bMin = brk(breaks, "T2M_MIN|annual"), bMax = brk(breaks, "T2M_MAX|annual");
+  const kMin = bMin ? breakKind(bMin) : undefined;
+  const lateMin = nat["T2M_MIN|annual@1998"];
+  const mostlyJump = kMin === "one" && !!lateMin && verdict(lateMin) !== "yes";
   const pmdMax = PMD.find((x) => x.id === "T2M_MAX"), pmdMin = PMD.find((x) => x.id === "T2M_MIN");
   return (
     <section className="mt-6">
@@ -105,8 +110,21 @@ export default function CaseFile1({ nat, cells, series }: { nat: Nat; cells: Cel
       <p className="mt-1 text-sm text-slate-600">
         Is the night time low changing differently from the daytime high? National average of our 38 grid cells. The chart shows change from each line's own 1981 to 1990 average.
       </p>
+      {bMin && bMax && (
+        <div className="mt-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-slate-800">
+          <p className="font-semibold">
+            {mostlyJump ? `Read this first: the night low rise is mostly one jump near ${bMin.national.year}, not steady warming.` : "Read this first: the break check on the yearly series."}
+          </p>
+          <ul className="mt-1 list-disc space-y-1 pl-5">
+            <li>{breakSentence(bMin, "Night time low")}</li>
+            <li>{breakSentence(bMax, "Daytime high")}{bMax.national.year !== bMin.national.year ? " The daytime high has a different break year from the night low." : ""}</li>
+            {lateMin && <li>From 1998 to 2025, after the night low jump, its trend is {fmt(lateMin.slope)} ({fmt(lateMin.lo)} to {fmt(lateMin.hi)}) {"\u00B0C"} per decade, {verdictLabel(lateMin)}. The 1998 to 2025 view is the cleaner view of what happened since the jump.</li>}
+            {kMin === "one" && <li>{CAUSE_NOTE}</li>}
+          </ul>
+        </div>
+      )}
       <div className="mt-2 rounded border border-slate-200 p-2">
-        <TwoLines lines={[
+        <TwoLines jumpYear={kMin === "one" && bMin ? bMin.national.year : undefined} lines={[
           { label: "Daytime high", color: "#ea580c", years: dMax.years, vals: dMax.vals, slope: mx.slope },
           { label: "Night time low", color: "#2563eb", years: dMin.years, vals: dMin.vals, slope: mn.slope },
         ]} />
@@ -156,7 +174,7 @@ export default function CaseFile1({ nat, cells, series }: { nat: Nat; cells: Cel
           </li>
         )}
         <li>
-          A negative gap change means the gap between day and night is narrowing. This page shows what changed, not why. The jump around 1997 in the national series has an unknown cause, which is why the 1998 to 2025 view is shown next to the full period. Values are a 50 km reanalysis, not weather stations.
+          A negative gap change means the gap between day and night is narrowing. This page shows what changed, not why. The cause of the level jump is not claimed, which is why the 1998 to 2025 view is shown next to the full period. Values are a 50 km reanalysis, not weather stations.
         </li>
       </ul>
     </section>

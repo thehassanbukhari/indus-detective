@@ -1,5 +1,6 @@
 import { PMD, PMD_SPRING, verdict, verdictLabel } from "./PmdPanel";
 import { TwoLines, national } from "./CaseFile1";
+import { brk, breakKind, breakSentence, CAUSE_NOTE, type BreaksFile } from "./breaks";
 
 type T = { slope: number; lo: number; hi: number; p: number; n: number };
 type Nat = Record<string, T>;
@@ -17,7 +18,7 @@ const WINDOWS = [
   { sfx: "@1998", label: "1998 to 2025" },
 ];
 
-export default function CaseFile2({ nat, cells, series }: { nat: Nat; cells: Cell[]; series: Series }) {
+export default function CaseFile2({ nat, cells, series, breaks }: { nat: Nat; cells: Cell[]; series: Series; breaks: BreaksFile }) {
   const mx = nat["T2M_MAX|FMA"], mn = nat["T2M_MIN|FMA"];
   if (!mx || !mn) return null;
   const dMax = national(series, "T2M_MAX|FMA");
@@ -29,15 +30,30 @@ export default function CaseFile2({ nat, cells, series }: { nat: Nat; cells: Cel
   };
   const day = stat("T2M_MAX");
   const pmdMax = PMD.find((x) => x.id === "T2M_MAX");
+  const bMin = brk(breaks, "T2M_MIN|FMA"), bMax = brk(breaks, "T2M_MAX|FMA");
+  const kMin = bMin ? breakKind(bMin) : undefined;
+  const lateMin = nat["T2M_MIN|FMA@1998"];
+  const mostlyJump = kMin === "one" && !!lateMin && verdict(lateMin) !== "yes";
   return (
     <section className="mt-6">
       <h2 className="text-lg font-semibold">Case file 2: spring, February to April</h2>
       <p className="mt-1 text-sm text-slate-600">
         How is spring changing, and is it the days or the nights? National average of our 38 grid cells. The chart shows change from each line's own 1981 to 1990 average.
       </p>
+      {bMin && bMax && (
+        <div className="mt-2 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-slate-800">
+          <p className="font-semibold">
+            {mostlyJump ? `Read this first: the spring night low rise is mostly one jump near ${bMin.national.year}, not steady warming.` : "Read this first: the break check on the spring series."}
+          </p>
+          <ul className="mt-1 list-disc space-y-1 pl-5">
+            <li>{breakSentence(bMin, "Spring night time low")}</li>
+            <li>{breakSentence(bMax, "Spring daytime high")}</li>
+            {kMin === "one" && <li>{CAUSE_NOTE}</li>}
+          </ul>
+        </div>
+      )}
       <div className="mt-2 rounded border border-slate-200 p-2">
         <TwoLines
-          jump={false}
           label="Feb to Apr daytime high and night time low, national average change since 1981 to 1990"
           lines={[
             { label: "Daytime high", color: "#ea580c", years: dMax.years, vals: dMax.vals, slope: mx.slope },
@@ -90,7 +106,7 @@ export default function CaseFile2({ nat, cells, series }: { nat: Nat; cells: Cel
           </li>
         )}
         <li>
-          National spring changes that pass the test, out of 3: {VARS.filter((r) => nat[`${r.id}|FMA`] && verdict(nat[`${r.id}|FMA`]) === "yes").length} in 1981 to 2025 and {VARS.filter((r) => nat[`${r.id}|FMA@1998`] && verdict(nat[`${r.id}|FMA@1998`]) === "yes").length} in 1998 to 2025. The jump around 1997 seen in the yearly series has an unknown cause, which is why both windows are shown.
+          National spring changes that pass the test, out of 3: {VARS.filter((r) => nat[`${r.id}|FMA`] && verdict(nat[`${r.id}|FMA`]) === "yes").length} in 1981 to 2025 and {VARS.filter((r) => nat[`${r.id}|FMA@1998`] && verdict(nat[`${r.id}|FMA@1998`]) === "yes").length} in 1998 to 2025. The cause of the level jump is not claimed, which is why both windows are shown.
         </li>
         <li>
           This page shows what changed, not why. Values are a 50 km reanalysis, not weather stations.

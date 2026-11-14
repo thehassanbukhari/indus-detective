@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import PmdPanel, { type Nat } from "./PmdPanel";
 import CaseFile1 from "./CaseFile1";
 import CaseFile2 from "./CaseFile2";
+import TrustPanel from "./TrustPanel";
+import { brk, type BreaksFile } from "./breaks";
 
 type Trend = { slope: number; lo: number; hi: number; p: number; n: number; sig: boolean };
 type Cell = { name: string; aliases: string[]; lat: number; lon: number; trends: Record<string, Trend | null> };
@@ -132,6 +134,7 @@ export default function App() {
   const [cells, setCells] = useState<Cell[] | null>(null);
   const [series, setSeries] = useState<Series | null>(null);
   const [nat, setNat] = useState<Nat | null>(null);
+  const [breaks, setBreaks] = useState<BreaksFile | null>(null);
   const [name, setName] = useState("Topi");
   const [v, setV] = useState("T2M");
   const [season, setSeason] = useState("annual");
@@ -143,13 +146,14 @@ export default function App() {
       fetch(base + "data/trends.json").then((r) => r.json()),
       fetch(base + "data/series.json").then((r) => r.json()),
       fetch(base + "data/national.json").then((r) => r.json()),
+      fetch(base + "data/breaks.json").then((r) => r.json()),
     ])
-      .then(([c, s, n]) => { setCells(c); setSeries(s); setNat(n); })
+      .then(([c, s, n, b]) => { setCells(c); setSeries(s); setNat(n); setBreaks(b); })
       .catch((e) => setErr(String(e)));
   }, []);
 
   if (err) return <p className="p-6">Could not load data: {err}</p>;
-  if (!cells || !series || !nat) return <p className="p-6">Loading</p>;
+  if (!cells || !series || !nat || !breaks) return <p className="p-6">Loading</p>;
 
   const cell = cells.find((c) => c.name === name) ?? cells[0];
   const key = `${v}|${season}`;
@@ -160,6 +164,7 @@ export default function App() {
   const vals = years.map((y) => raw[String(y)]);
   const vinfo = VARS.find((x) => x.id === v)!;
   const sinfo = SEASONS.find((x) => x.id === season)!;
+  const jumpYear = brk(breaks, "T2M_MIN|annual")?.national.year;
   const excludesZero = t ? t.lo > 0 || t.hi < 0 : false;
   const sigText = !t ? "" : t.sig
     ? "Yes. It passes the strict test used when many places are compared at once."
@@ -207,7 +212,7 @@ export default function App() {
       </div>
       <p className="mt-2 text-sm text-slate-600">{vinfo.def} Each point is the average for {sinfo.label.toLowerCase()} of one year.</p>
       {win === "1998" && (
-        <p className="mt-1 text-xs text-slate-500">This view starts after a level jump around 1997 that appears in the national series, so the jump does not count as a trend.</p>
+        <p className="mt-1 text-xs text-slate-500">{`This view starts after a level jump near ${jumpYear} that the break check found in the national series, so the jump does not count as a trend.`}</p>
       )}
 
       <div className="mt-4 rounded border border-slate-200 p-2">
@@ -236,10 +241,12 @@ export default function App() {
         </div>
       </section>
 
-      <CaseFile1 nat={nat} cells={cells} series={series} />
-      <CaseFile2 nat={nat} cells={cells} series={series} />
+      <CaseFile1 nat={nat} cells={cells} series={series} breaks={breaks} />
+      <CaseFile2 nat={nat} cells={cells} series={series} breaks={breaks} />
 
       <PmdPanel nat={nat} cells={cells} />
+
+      <TrustPanel nat={nat} breaks={breaks} />
 
       <details className="mt-6 rounded border border-slate-200 p-3 text-sm">
         <summary className="cursor-pointer font-semibold">About this data and its limits</summary>
@@ -249,7 +256,7 @@ export default function App() {
           <li>Values are averages of daily highs, daily lows and daily means. Monthly extremes are not used.</li>
           <li>Trend: Theil Sen slope with a 95% range from a block bootstrap. Tests in our own checks show these ranges are slightly too narrow (roughly 80 to 87 in 100 cover the truth, not 95).</li>
           <li>Significant means the change passes a test that accounts for many correlated years and for checking 38 places at once, and its range excludes zero.</li>
-          <li>The national minimum temperature jumps up after 1997. We do not know why, so the 1998 to 2025 view is offered next to the full period.</li>
+          <li>{`The national night time low shows a level jump near ${jumpYear}. We do not know why, so the 1998 to 2025 view is offered next to the full period. See the trust panel for the break check.`}</li>
           <li>Rainfall is not shown. The rainfall values in this source looked implausible and shifted in recent years, so they are not reliable for trends.</li>
         </ul>
       </details>

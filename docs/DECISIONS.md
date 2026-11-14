@@ -40,3 +40,9 @@ Vercel only. A second mirror was dropped to save effort. The video and slides co
 
 ## Still pending
 Hand check of five grid cells against the POWER Data Access Viewer. Result will be added here and overrides any wording that it contradicts.
+
+## Break check wording
+A Pettitt change point test found that the night low jumps in about the same year (1998) in nearly every grid cell, that the daytime high has a different break near 2005, and that the summer daytime high breaks near 2006. The case files now say that most of the night low rise sits in one jump rather than steady warming. All numbers on screen are read from the break check file. The cause is not claimed. The Pettitt p values ignore autocorrelation, so they are shown as descriptive only and never called significant.
+
+## Trust grade
+The trust panel grades each national trend with a fixed rule. It must be significant over 1981 to 2025, otherwise it is not a finding. It must also be significant from 1998 to 2025, and show no shared break year, to rank higher. The grade is Robust only if the hand check against the POWER viewer has passed. At the moment the two night low trends are Fragile and the other four are not findings.
