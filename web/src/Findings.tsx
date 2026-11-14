@@ -78,26 +78,44 @@ export function buildFindings(nat: Nat, cells: CellLite[]): Finding[] {
   return out;
 }
 
-const BORDER: Record<Verdict, string> = { yes: "border-teal-600", inconclusive: "border-slate-500", no: "border-slate-300" };
+const BADGE: Record<Verdict, string> = { yes: "statistically significant", inconclusive: "not conclusive", no: "no clear trend" };
+const BADGE_CLS: Record<Verdict, string> = {
+  yes: "border-teal-300 bg-teal-50 text-teal-900",
+  inconclusive: "border-slate-300 bg-slate-100 text-slate-800",
+  no: "border-slate-300 bg-white text-slate-700",
+};
 
 export default function Findings({ nat, cells }: { nat: Nat; cells: CellLite[] }) {
   const items = buildFindings(nat, cells);
   if (!items.length) return null;
+  const lead = items.slice(0, 2).map((f) => f.head).join(" ");
   return (
-    <section className="mt-4 rounded border border-slate-200 bg-slate-50 p-3">
-      <h2 className="text-lg font-semibold">What NASA data shows</h2>
-      <p className="mt-1 text-sm text-slate-600">
+    <section className="mt-8">
+      <p className="text-sm font-semibold uppercase tracking-wide text-teal-700">What NASA data shows</p>
+      <h2 className="mt-2 text-2xl font-semibold leading-snug tracking-tight text-slate-900 sm:text-3xl">{lead}</h2>
+      <p className="mt-3 text-sm text-slate-600">
         Change per decade, 1981 to 2025, national average of 38 NASA grid cells unless stated.
       </p>
-      <ol className="mt-3 space-y-3">
+      <ol className="mt-4 divide-y divide-slate-200 border-y border-slate-200">
         {items.map((f, i) => (
-          <li key={i} className={"border-l-4 pl-3 " + BORDER[f.v]}>
-            <p className="font-semibold">{f.head}</p>
-            {f.lines.map((l, j) => <p key={j} className="mt-1 text-sm text-slate-700">{l}</p>)}
+          <li key={i} className="py-4">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <p className="font-semibold text-slate-900">{f.head}</p>
+              <span className={"rounded-full border px-2.5 py-0.5 text-sm " + BADGE_CLS[f.v]}>National average: {BADGE[f.v]}</span>
+            </div>
+            <p className="mt-2 text-sm tabular-nums text-slate-700">{f.lines[0]}</p>
+            {f.lines.length > 1 && (
+              <details className="mt-1 text-sm text-slate-700">
+                <summary className="flex min-h-11 cursor-pointer items-center text-teal-700 underline">More numbers</summary>
+                <div className="space-y-2 pb-1 tabular-nums">
+                  {f.lines.slice(1).map((l, j) => <p key={j}>{l}</p>)}
+                </div>
+              </details>
+            )}
           </li>
         ))}
       </ol>
-      <p className="mt-3 text-xs text-slate-600">
+      <p className="mt-3 text-sm text-slate-600">
         The 95% range is the span of changes the data supports. A trend is a straight line fitted through the yearly values. The strict test is the one used when many places are compared at once.
       </p>
     </section>
