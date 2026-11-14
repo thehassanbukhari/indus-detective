@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PmdPanel, { type Nat } from "./PmdPanel";
 
 type Trend = { slope: number; lo: number; hi: number; p: number; n: number; sig: boolean };
 type Cell = { name: string; aliases: string[]; lat: number; lon: number; trends: Record<string, Trend | null> };
@@ -128,6 +129,7 @@ function DotMap({ cells, tkey, selected, onPick }: { cells: Cell[]; tkey: string
 export default function App() {
   const [cells, setCells] = useState<Cell[] | null>(null);
   const [series, setSeries] = useState<Series | null>(null);
+  const [nat, setNat] = useState<Nat | null>(null);
   const [name, setName] = useState("Topi");
   const [v, setV] = useState("T2M");
   const [season, setSeason] = useState("annual");
@@ -138,13 +140,14 @@ export default function App() {
     Promise.all([
       fetch(base + "data/trends.json").then((r) => r.json()),
       fetch(base + "data/series.json").then((r) => r.json()),
+      fetch(base + "data/national.json").then((r) => r.json()),
     ])
-      .then(([c, s]) => { setCells(c); setSeries(s); })
+      .then(([c, s, n]) => { setCells(c); setSeries(s); setNat(n); })
       .catch((e) => setErr(String(e)));
   }, []);
 
   if (err) return <p className="p-6">Could not load data: {err}</p>;
-  if (!cells || !series) return <p className="p-6">Loading</p>;
+  if (!cells || !series || !nat) return <p className="p-6">Loading</p>;
 
   const cell = cells.find((c) => c.name === name) ?? cells[0];
   const key = `${v}|${season}`;
@@ -230,6 +233,8 @@ export default function App() {
           <DotMap cells={cells} tkey={win === "1998" ? `${key}@1998` : key} selected={cell.name} onPick={setName} />
         </div>
       </section>
+
+      <PmdPanel nat={nat} cells={cells} />
 
       <details className="mt-6 rounded border border-slate-200 p-3 text-sm">
         <summary className="cursor-pointer font-semibold">About this data and its limits</summary>
