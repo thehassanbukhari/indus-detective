@@ -10,6 +10,7 @@ export const PMD = [
 ];
 const PMD_RAIN = "about 7.4 mm per decade decline, not statistically significant";
 export const PMD_SPRING = 1.0;
+export const PMD_SUMMER = 0.6;
 
 export type Verdict = "yes" | "inconclusive" | "no";
 type R = { lo: number; hi: number; p: number };

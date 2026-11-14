@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import PmdPanel, { type Nat } from "./PmdPanel";
 import CaseFile1 from "./CaseFile1";
 import CaseFile2 from "./CaseFile2";
+import CaseFile3 from "./CaseFile3";
 import TrustPanel from "./TrustPanel";
 import SourcesPanel from "./SourcesPanel";
 import Findings from "./Findings";
@@ -259,6 +260,7 @@ export default function App() {
 
       <CaseFile1 nat={nat} cells={cells} series={series} breaks={breaks} />
       <CaseFile2 nat={nat} cells={cells} series={series} breaks={breaks} />
+      <CaseFile3 nat={nat} cells={cells} series={series} breaks={breaks} />
 
       <PmdPanel nat={nat} cells={cells} />
 
