@@ -28,3 +28,5 @@ lab/cache/
 .DS_Store
 .idea/
 .vscode/
+NEXT_PROMPT.txt
+web/*.log
