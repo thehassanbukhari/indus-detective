@@ -32,6 +32,62 @@ const fmt = (x: number) => (x >= 0 ? "+" : "\u2212") + Math.abs(x).toFixed(2);
 
 const placeOf = (v: number, t: R) => (v < t.lo ? "below" : v > t.hi ? "above" : "inside");
 
+// One row per variable: the NASA 95% range as a bar, the PMD press figure as a marker line. GISTEMP is a second bar for average temperature.
+export function PmdChart({ nat, gist }: { nat: Nat; gist?: Gist | null }) {
+  const rows = PMD.flatMap((r) => {
+    const n = nat[`${r.id}|annual`];
+    if (!n) return [];
+    const g = r.id === "T2M" && gist && gist["T2M|annual"] ? gist["T2M|annual"] : null;
+    return [{ id: r.id, label: r.label, pmd: r.value, bars: [{ name: "MERRA-2", t: n, c: "#0f766e" }, ...(g ? [{ name: "GISTEMP", t: g, c: "#5eead4" }] : [])] }];
+  });
+  if (!rows.length) return null;
+  const W = 560, ml = 20, mr = 20, rowGap = 22, barH = 14, lineH = 28;
+  const all = rows.flatMap((r) => [r.pmd, ...r.bars.flatMap((b) => [b.t.lo, b.t.hi])].concat(0));
+  const step = 0.2;
+  const d0 = Math.floor((Math.min(...all) - 0.05) / step) * step, d1 = Math.ceil((Math.max(...all) + 0.05) / step) * step;
+  const sx = (v: number) => ml + ((v - d0) / (d1 - d0)) * (W - ml - mr);
+  const ticks: number[] = [];
+  for (let v = d0; v <= d1 + 1e-9; v += step) ticks.push(Math.round(v * 10) / 10);
+  let y = 10;
+  const blocks = rows.map((r) => {
+    const top = y;
+    const barsTop = top + 26;
+    const h = r.bars.length * lineH;
+    y = barsTop + h + rowGap;
+    return { r, top, barsTop, h };
+  });
+  const H = y - rowGap + 56;
+  const axisY = y - rowGap + 6;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-label="NASA 95% ranges for the national trend next to the PMD figures">
+      {ticks.map((t) => (
+        <g key={t}>
+          <line x1={sx(t)} x2={sx(t)} y1={6} y2={axisY} stroke={Math.abs(t) < 1e-9 ? "#475569" : "#e2e8f0"} strokeDasharray={Math.abs(t) < 1e-9 ? "4 3" : undefined} />
+          <text x={sx(t)} y={axisY + 20} textAnchor="middle" fontSize="16" fill="#475569">{fmt(t)}</text>
+        </g>
+      ))}
+      <text x={W - mr} y={axisY + 40} textAnchor="end" fontSize="15" fill="#475569">{"\u00B0C"} per decade, 1981 to 2025</text>
+      {blocks.map(({ r, top, barsTop, h }) => (
+        <g key={r.id}>
+          <text x={ml} y={top + 16} fontSize="17" fontWeight="600" fill="#0f172a">{r.label}</text>
+          {r.bars.map((b, i) => {
+            const by = barsTop + i * lineH + 4;
+            return (
+              <g key={b.name}>
+                <rect x={sx(b.t.lo)} y={by} width={Math.max(2, sx(b.t.hi) - sx(b.t.lo))} height={barH} rx="2" fill={b.c} />
+                <circle cx={sx(b.t.slope)} cy={by + barH / 2} r="4" fill="#fff" stroke="#0f172a" strokeWidth="1.5" />
+                <text x={sx(Math.max(b.t.hi, r.pmd)) + 8} y={by + barH - 1} fontSize="15" fill="#334155">{b.name}</text>
+              </g>
+            );
+          })}
+          <line x1={sx(r.pmd)} x2={sx(r.pmd)} y1={barsTop - 2} y2={barsTop + h} stroke="#475569" strokeWidth="3" />
+          <text x={sx(r.pmd)} y={barsTop - 6} textAnchor="middle" fontSize="15" fontWeight="600" fill="#475569">PMD</text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLite[]; gist?: Gist | null }) {
   const mer = nat["T2M|annual"], mer98 = nat["T2M|annual@1998"];
   const pmdMean = PMD.find((x) => x.id === "T2M");
@@ -43,6 +99,9 @@ export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLi
       <div>{verdictLabel(t)}</div>
     </>
   );
+  const cmp = PMD.flatMap((r) => { const n = nat[`${r.id}|annual`]; return n ? [{ name: r.label.toLowerCase(), inside: r.value >= n.lo && r.value <= n.hi }] : []; });
+  const ins = cmp.filter((x) => x.inside).map((x) => x.name), outs = cmp.filter((x) => !x.inside).map((x) => x.name);
+  const claim = [ins.length ? `The PMD figure is inside the NASA range for ${ins.join(" and ")}.` : "", outs.length ? `It is outside the NASA range for ${outs.join(" and ")}.` : ""].filter(Boolean).join(" ");
   const spring = nat["T2M_MAX|FMA"];
   const steep = cells
     .flatMap((c) => { const t = c.trends["T2M_MAX|FMA"]; return t ? [{ name: c.name, slope: t.slope }] : []; })
@@ -53,6 +112,13 @@ export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLi
       <p className="mt-1 text-sm text-slate-600">
         Change per decade, 1981 to 2025. PMD figures are labelled: PMD report (2026) as reported in press. They come from ground stations. The NASA figure is the average of our 38 grid cells.
       </p>
+      <p className="mt-3 text-base font-semibold text-slate-900">{claim}</p>
+      <div className="mt-2 rounded border border-slate-200 p-2">
+        <PmdChart nat={nat} gist={gist} />
+        <p className="px-2 pb-1 text-sm text-slate-700">Bars: the NASA 95% range for the national trend, from MERRA-2 and, for average temperature, GISTEMP. White dot: the NASA trend. Grey line: the PMD figure as reported in press. Dashed line: zero change.</p>
+      </div>
+      <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
+        <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Numbers and sources</summary>
       <div className="mt-2 overflow-x-auto rounded border border-slate-200">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-sm text-slate-600">
@@ -148,6 +214,7 @@ export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLi
           Differences are shown as found. A 50 km reanalysis grid and ground stations measure different things, and our national average is a plain average of the 38 cells, not weighted by area.
         </li>
       </ul>
+      </details>
     </section>
   );
 }
