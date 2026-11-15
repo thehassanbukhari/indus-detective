@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import PmdPanel, { type Nat, type Gist } from "./PmdPanel";
 import CaseFile1 from "./CaseFile1";
 import CaseFile2 from "./CaseFile2";
@@ -89,11 +89,13 @@ const V3_BADGE: Record<V3, string> = {
   no: "border-slate-300 bg-white text-slate-700",
 };
 
+const verdictOf = (t: Trend): V3 => (t.sig ? "yes" : t.lo > 0 || t.hi < 0 ? "inconclusive" : "no");
+
 function ResultCard({ t, title }: { t: Trend | null; title: string }) {
   if (!t) return <p className="mt-4 text-sm">Not enough years for this view.</p>;
-  const key: V3 = t.sig ? "yes" : t.lo > 0 || t.hi < 0 ? "inconclusive" : "no";
+  const key = verdictOf(t);
   return (
-    <div className={"mt-4 rounded border border-l-4 border-slate-200 p-3 " + V3_BAR[key]}>
+    <div id="selected-result" className={"mt-4 scroll-mt-4 rounded border border-l-4 border-slate-200 p-3 " + V3_BAR[key]}>
       <p className="text-sm text-slate-600">{title}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{fmt(t.slope)} {"\u00B0C"} per decade</p>
       <p className="text-sm tabular-nums text-slate-600">95% range {fmt(t.lo)} to {fmt(t.hi)}</p>
@@ -128,9 +130,23 @@ function DotMap({ cells, tkey, selected, onPick }: { cells: Cell[]; tkey: string
   const labelled = new Set(["Karachi", "Lahore", "Quetta", "Gilgit", "Islamabad", selected]);
   const grid = (c: number[]) => c.map(String);
   const gradient = `linear-gradient(to right, rgb(${COLD.join(",")}), rgb(${MID.join(",")}), rgb(${HOT.join(",")}))`;
+  const sel = rows.find((r) => r.c.name === selected);
+  // The three closest places, so a crowded area can be fixed with one tap on a button instead of a second try on a dot.
+  const near = sel
+    ? rows
+        .filter((r) => r.c.name !== selected)
+        .map((r) => ({ r, d: Math.hypot((r.c.lon - sel.c.lon) * Math.cos((sel.c.lat * Math.PI) / 180), r.c.lat - sel.c.lat) }))
+        .sort((a, b) => a.d - b.d)
+        .slice(0, 3)
+        .map((x) => x.r)
+    : [];
+  const toResult = () => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    document.getElementById("selected-result")?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  };
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Map of trend per grid cell" style={{ cursor: "pointer" }}
+      <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-label="Map of trend per grid cell" style={{ cursor: "pointer", touchAction: "manipulation" }}
         onClick={(e) => {
           const r = e.currentTarget.getBoundingClientRect();
           const x = ((e.clientX - r.left) * W) / r.width;
@@ -146,13 +162,13 @@ function DotMap({ cells, tkey, selected, onPick }: { cells: Cell[]; tkey: string
         {grid([65, 70, 75]).map((g) => (
           <g key={"lon" + g}>
             <line x1={sx(Number(g))} x2={sx(Number(g))} y1={mt} y2={H - mb} stroke="#e2e8f0" />
-            <text x={sx(Number(g))} y={H - 10} textAnchor="middle" fontSize="14" fill="#64748b">{g} E</text>
+            <text x={sx(Number(g))} y={H - 8} textAnchor="middle" fontSize="16" fill="#475569">{g} E</text>
           </g>
         ))}
         {grid([25, 30, 35]).map((g) => (
           <g key={"lat" + g}>
             <line x1={ml} x2={W - mr} y1={sy(Number(g))} y2={sy(Number(g))} stroke="#e2e8f0" />
-            <text x={ml - 6} y={sy(Number(g)) + 4} textAnchor="end" fontSize="14" fill="#64748b">{g} N</text>
+            <text x={ml - 6} y={sy(Number(g)) + 5} textAnchor="end" fontSize="16" fill="#475569">{g} N</text>
           </g>
         ))}
         {rows.map(({ c, t }) => {
@@ -167,20 +183,40 @@ function DotMap({ cells, tkey, selected, onPick }: { cells: Cell[]; tkey: string
           );
         })}
         {rows.filter((r) => labelled.has(r.c.name)).map(({ c }) => (
-          <text key={"l" + c.name} x={sx(c.lon) + 12} y={sy(c.lat) + 4} fontSize="15" fill="#1e293b" style={{ pointerEvents: "none" }}>{c.name}</text>
+          <text key={"l" + c.name} x={sx(c.lon) + 12} y={sy(c.lat) + 5} fontSize="17" fill="#1e293b" style={{ pointerEvents: "none" }}>{c.name}</text>
         ))}
       </svg>
-      <div className="mx-2 mt-1 flex items-center gap-2 text-xs text-slate-600">
+      <div className="mx-2 mt-1 flex items-center gap-2 text-sm text-slate-600">
         <span>{"\u2212"}{lim.toFixed(1)}</span>
         <div className="h-3 flex-1 rounded" style={{ background: gradient }} />
         <span>+{lim.toFixed(1)} {"\u00B0C"} per decade</span>
       </div>
-      <p className="mx-2 mt-2 text-xs text-slate-600">
+      <p className="mx-2 mt-2 text-sm text-slate-600">
         Big dot with a thick black ring: significant. Thin dark ring: the range excludes zero but it fails the strict test. Light ring: could be natural variation.
       </p>
       <p className="mx-2 mt-1 text-sm">
         {rows.length} places: {up} rising, {rows.length - up} falling. {nsig} pass the strict test ({nsigUp} rising, {nsig - nsigUp} falling).
       </p>
+      {sel && (
+        <div className={"mx-2 mt-3 rounded border border-l-4 border-slate-200 p-3 " + V3_BAR[verdictOf(sel.t)]}>
+          <p className="font-semibold text-slate-900">{sel.c.name}</p>
+          <p className="text-sm tabular-nums text-slate-700">{fmt(sel.t.slope)} {"\u00B0C"} per decade (95% range {fmt(sel.t.lo)} to {fmt(sel.t.hi)})</p>
+          <p className="mt-1">
+            <span className={"inline-block rounded-full border px-2.5 py-0.5 text-sm font-medium " + V3_BADGE[verdictOf(sel.t)]}>{V3_LABEL[verdictOf(sel.t)]}</span>
+          </p>
+          <button type="button" onClick={toResult} className="mt-1 flex min-h-11 items-center text-sm text-teal-700 underline">See its chart</button>
+          {near.length > 0 && (
+            <div>
+              <p className="text-sm text-slate-600">Nearby places, tap to switch:</p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {near.map(({ c }) => (
+                  <button key={c.name} type="button" onClick={() => onPick(c.name)} className="min-h-11 rounded-full border border-slate-300 px-3 text-sm text-slate-800">{c.name}</button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -196,6 +232,19 @@ export default function App() {
   const [season, setSeason] = useState("annual");
   const [win, setWin] = useState("1981");
   const [err, setErr] = useState("");
+  const mapRef = useRef<HTMLDivElement>(null);
+  const keepTop = useRef<number | null>(null);
+  const pick = (n: string) => {
+    if (n === name) return;
+    if (mapRef.current) keepTop.current = mapRef.current.getBoundingClientRect().top;
+    setName(n);
+  };
+  useLayoutEffect(() => {
+    if (keepTop.current === null || !mapRef.current) return;
+    const d = mapRef.current.getBoundingClientRect().top - keepTop.current;
+    keepTop.current = null;
+    if (Math.abs(d) > 1) window.scrollBy(0, d);
+  }, [name]);
 
   useEffect(() => {
     Promise.all([
@@ -296,10 +345,10 @@ export default function App() {
       <section className="mt-6">
         <h2 className="text-lg font-semibold">Where is it changing?</h2>
         <p className="mt-1 text-sm text-slate-600">
-          One dot per NASA grid cell, coloured by the trend for the variable, season and years chosen above. Tap a dot to open that place.
+          One dot per NASA grid cell, coloured by the trend for the variable, season and years chosen above. Tap a dot to select that place. Its result appears under the map.
         </p>
-        <div className="mt-2 rounded border border-slate-200 p-2">
-          <DotMap cells={cells} tkey={win === "1998" ? `${key}@1998` : key} selected={cell.name} onPick={setName} />
+        <div ref={mapRef} className="mt-2 rounded border border-slate-200 p-2">
+          <DotMap cells={cells} tkey={win === "1998" ? `${key}@1998` : key} selected={cell.name} onPick={pick} />
         </div>
       </section>
 
