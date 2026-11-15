@@ -40,9 +40,10 @@ export default function TrustPanel({ nat, breaks }: { nat: Nat; breaks: BreaksFi
       <p className="mt-1 text-sm text-slate-600">
         Each national trend gets a grade from a fixed rule, not from opinion. The grade is for the national average of our 38 grid cells, not for single places.
       </p>
-      <div className="mt-2 overflow-x-auto rounded border border-slate-200">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs text-slate-600">
+      <p className="mt-2 text-sm text-slate-600 sm:hidden">Swipe the table sideways to see all columns.</p>
+      <div className="mt-1 overflow-x-auto rounded border border-slate-200">
+        <table className="w-full min-w-[34rem] text-left text-sm">
+          <thead className="bg-slate-50 text-sm text-slate-600">
             <tr><th className="p-2">Finding</th><th className="p-2">1981 to 2025</th><th className="p-2">1998 to 2025</th><th className="p-2">Break check</th><th className="p-2">Grade</th></tr>
           </thead>
           <tbody>

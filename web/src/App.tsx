@@ -325,7 +325,7 @@ export default function App() {
       </div>
       <p className="mt-2 text-sm text-slate-600">{vinfo.def} Each point is the average for {sinfo.label.toLowerCase()} of one year.</p>
       {win === "1998" && (
-        <p className="mt-1 text-xs text-slate-500">{`This view starts after a level jump near ${jumpYear} that the break check found in the national series, so the jump does not count as a trend.`}</p>
+        <p className="mt-1 text-sm text-slate-600">{`This view starts after a level jump near ${jumpYear} that the break check found in the national series, so the jump does not count as a trend.`}</p>
       )}
 
       <ResultCard t={t} title={`${cell.name}: ${vinfo.label}, ${sinfo.label}, ${win} to 2025`} />
@@ -375,7 +375,7 @@ export default function App() {
         </ul>
       </details>
 
-      <p className="mt-4 text-xs text-slate-500">Data: NASA POWER (MERRA-2). Built by team GitGoblins for NASA Space Apps Challenge 2026.</p>
+      <p className="mt-4 text-sm text-slate-600">Data: NASA POWER (MERRA-2). Built by team GitGoblins for NASA Space Apps Challenge 2026.</p>
     </main>
   );
 }

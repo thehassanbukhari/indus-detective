@@ -34,28 +34,35 @@ export function national(series: Series, key: string) {
 type Line = { label: string; color: string; years: number[]; vals: number[]; slope: number };
 
 export function TwoLines({ lines, jumpYear, label = "Daytime high and night time low, national average change since 1981 to 1990" }: { lines: Line[]; jumpYear?: number; label?: string }) {
-  const W = 640, H = 320, ml = 60, mr = 16, mt = 34, mb = 36;
+  const W = 560, H = 340, ml = 58, mr = 100, mt = 40, mb = 38;
   const all = lines.flatMap((l) => l.vals);
   const y0 = Math.min(...all) - 0.3, y1 = Math.max(...all) + 0.3;
   const sx = (x: number) => ml + ((x - 1981) / (2025 - 1981)) * (W - ml - mr);
   const sy = (y: number) => H - mb - ((y - y0) / (y1 - y0)) * (H - mt - mb);
   const yt = Array.from({ length: 5 }, (_, i) => y0 + ((y1 - y0) * i) / 4);
+  // Direct labels at the right end of each yearly line, kept at least 24 units apart.
+  const short: Record<string, string> = { "Daytime high": "Day high", "Night time low": "Night low" };
+  const dark: Record<string, string> = { "#ea580c": "#c2410c", "#2563eb": "#1d4ed8" };
+  const ends = lines.map((l) => ({ l, y: sy(l.vals[l.vals.length - 1]) })).sort((a, b) => a.y - b.y);
+  let prev = -Infinity;
+  const placed = ends.map((e) => { const ty = Math.max(e.y + 6, prev + 24); prev = ty; return { l: e.l, ty }; });
+  const over = Math.max(0, placed[placed.length - 1].ty - (H - mb - 2));
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label={label}>
+    <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-label={label}>
+      <text x={ml} y={18} fontSize="17" fill="#475569">Change in {"\u00B0C"}</text>
       {yt.map((t) => (
         <g key={t}>
           <line x1={ml} x2={W - mr} y1={sy(t)} y2={sy(t)} stroke="#e2e8f0" />
-          <text x={ml - 6} y={sy(t) + 4} textAnchor="end" fontSize="15" fill="#64748b">{fmt(t)}</text>
+          <text x={ml - 6} y={sy(t) + 5} textAnchor="end" fontSize="17" fill="#475569">{fmt(t)}</text>
         </g>
       ))}
       {[1985, 1995, 2005, 2015, 2025].map((t) => (
-        <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="15" fill="#64748b">{t}</text>
+        <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="17" fill="#475569">{t}</text>
       ))}
-      <text x={ml - 6} y={16} textAnchor="end" fontSize="15" fill="#64748b">{"\u00B0C"}</text>
       {jumpYear !== undefined && (
         <>
           <line x1={sx(jumpYear - 0.5)} x2={sx(jumpYear - 0.5)} y1={mt} y2={H - mb} stroke="#94a3b8" strokeDasharray="3 3" />
-          <text x={sx(jumpYear - 0.5) + 4} y={mt + 16} fontSize="13" fill="#64748b">{`level jump near ${jumpYear}`}</text>
+          <text x={sx(jumpYear - 0.5) + 5} y={mt + 18} fontSize="15" fill="#475569">{`level jump near ${jumpYear}`}</text>
         </>
       )}
       {lines.map((l) => {
@@ -64,11 +71,14 @@ export function TwoLines({ lines, jumpYear, label = "Daytime high and night time
         const path = l.years.map((x, i) => `${i ? "L" : "M"}${sx(x).toFixed(1)},${sy(l.vals[i]).toFixed(1)}`).join(" ");
         return (
           <g key={l.label}>
-            <path d={path} fill="none" stroke={l.color} strokeWidth="2" />
-            <line x1={sx(1981)} y1={sy(k * 1981 + b)} x2={sx(2025)} y2={sy(k * 2025 + b)} stroke={l.color} strokeWidth="2" strokeDasharray="6 4" />
+            <path d={path} fill="none" stroke={l.color} strokeWidth="2.5" />
+            <line x1={sx(1981)} y1={sy(k * 1981 + b)} x2={sx(2025)} y2={sy(k * 2025 + b)} stroke={l.color} strokeWidth="2.5" strokeDasharray="7 5" />
           </g>
         );
       })}
+      {placed.map((p) => (
+        <text key={"t" + p.l.label} x={sx(2025) + 8} y={p.ty - over} fontSize="17" fontWeight="600" fill={dark[p.l.color] ?? p.l.color}>{short[p.l.label] ?? p.l.label}</text>
+      ))}
     </svg>
   );
 }
@@ -128,13 +138,13 @@ export default function CaseFile1({ nat, cells, series, breaks }: { nat: Nat; ce
           { label: "Daytime high", color: "#ea580c", years: dMax.years, vals: dMax.vals, slope: mx.slope },
           { label: "Night time low", color: "#2563eb", years: dMin.years, vals: dMin.vals, slope: mn.slope },
         ]} />
-        <p className="px-2 text-xs text-slate-600">
-          <span style={{ color: "#ea580c" }}>{"\u25A0"}</span> Daytime high <span style={{ color: "#2563eb" }}>{"\u25A0"}</span> Night time low. Yearly values are solid, straight line trends are dashed.
+        <p className="px-2 pb-1 text-sm text-slate-700">
+          Orange: daytime high. Blue: night time low. Yearly values are solid, straight line trends are dashed.
         </p>
       </div>
       <div className="mt-3 overflow-x-auto rounded border border-slate-200">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs text-slate-600">
+          <thead className="bg-slate-50 text-sm text-slate-600">
             <tr>
               <th className="p-2">Change per decade</th>
               {windows.map((w) => <th key={w.sfx} className="p-2">{w.label}</th>)}
@@ -150,7 +160,7 @@ export default function CaseFile1({ nat, cells, series, breaks }: { nat: Nat; ce
                     <td key={w.sfx} className="p-2">
                       {t ? `${fmt(t.slope)} (${fmt(t.lo)} to ${fmt(t.hi)}) \u00B0C` : ""}
                       <br />
-                      <span className="text-xs text-slate-600">{t ? verdictLabel(t) : ""}</span>
+                      <span className="text-sm text-slate-600">{t ? verdictLabel(t) : ""}</span>
                     </td>
                   );
                 })}

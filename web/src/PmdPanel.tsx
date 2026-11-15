@@ -54,7 +54,7 @@ export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLi
       </p>
       <div className="mt-2 overflow-x-auto rounded border border-slate-200">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs text-slate-600">
+          <thead className="bg-slate-50 text-sm text-slate-600">
             <tr>
               <th className="p-2">Variable</th>
               <th className="p-2">PMD</th>
@@ -90,7 +90,7 @@ export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLi
           </p>
           <div className="mt-2 overflow-x-auto rounded border border-slate-200">
             <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-xs text-slate-600">
+              <thead className="bg-slate-50 text-sm text-slate-600">
                 <tr>
                   <th className="p-2">Source</th>
                   <th className="p-2">1981 to 2025</th>

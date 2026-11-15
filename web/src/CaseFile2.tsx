@@ -60,13 +60,13 @@ export default function CaseFile2({ nat, cells, series, breaks }: { nat: Nat; ce
             { label: "Night time low", color: "#2563eb", years: dMin.years, vals: dMin.vals, slope: mn.slope },
           ]}
         />
-        <p className="px-2 text-xs text-slate-600">
-          <span style={{ color: "#ea580c" }}>{"\u25A0"}</span> Daytime high <span style={{ color: "#2563eb" }}>{"\u25A0"}</span> Night time low. Feb to Apr values are solid, straight line trends are dashed.
+        <p className="px-2 pb-1 text-sm text-slate-700">
+          Orange: daytime high. Blue: night time low. Feb to Apr values are solid, straight line trends are dashed.
         </p>
       </div>
       <div className="mt-3 overflow-x-auto rounded border border-slate-200">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs text-slate-600">
+          <thead className="bg-slate-50 text-sm text-slate-600">
             <tr>
               <th className="p-2">Feb to Apr change per decade</th>
               {WINDOWS.map((w) => <th key={w.sfx} className="p-2">{w.label}</th>)}
@@ -82,7 +82,7 @@ export default function CaseFile2({ nat, cells, series, breaks }: { nat: Nat; ce
                     <td key={w.sfx} className="p-2">
                       {t ? `${fmt(t.slope)} (${fmt(t.lo)} to ${fmt(t.hi)}) \u00B0C` : ""}
                       <br />
-                      <span className="text-xs text-slate-600">{t ? verdictLabel(t) : ""}</span>
+                      <span className="text-sm text-slate-600">{t ? verdictLabel(t) : ""}</span>
                     </td>
                   );
                 })}
