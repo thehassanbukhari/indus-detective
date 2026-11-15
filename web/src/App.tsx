@@ -6,6 +6,7 @@ import CaseFile3 from "./CaseFile3";
 import TrustPanel from "./TrustPanel";
 import SourcesPanel from "./SourcesPanel";
 import Findings from "./Findings";
+import Method, { BTN_OUT, BTN_FILL } from "./Method";
 import { Term, GLOSS } from "./Term";
 import { brk, type BreaksFile } from "./breaks";
 
@@ -276,6 +277,14 @@ export default function App() {
       .catch((e) => setErr(String(e)));
   }, []);
 
+  // The documentation page lives at #method. Back and forward buttons work because the hash is the state.
+  const [method, setMethod] = useState(window.location.hash === "#method");
+  useEffect(() => {
+    const on = () => { setMethod(window.location.hash === "#method"); window.scrollTo(0, 0); };
+    window.addEventListener("hashchange", on);
+    return () => window.removeEventListener("hashchange", on);
+  }, []);
+
   // GISTEMP is optional: if the file is missing or fails, the site loads without that row.
   useEffect(() => {
     fetch(base + "data/gistemp.json")
@@ -298,9 +307,14 @@ export default function App() {
   const sinfo = SEASONS.find((x) => x.id === season)!;
   const jumpYear = brk(breaks, "T2M_MIN|annual")?.national.year;
 
+  if (method) return <Method nat={nat} cells={cells} breaks={breaks} gist={gist} />;
+
   return (
     <main className="mx-auto max-w-3xl p-4 text-slate-800">
-      <h1 className="text-2xl font-semibold">Indus Detective</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold">Indus Detective</h1>
+        <a href="#method" className={BTN_OUT}>How it works</a>
+      </div>
       <p className="mt-1 text-sm text-slate-600">
         How has Pakistan's temperature changed since 1981? Daily NASA data, 38 places, 45 years.
       </p>
@@ -382,6 +396,12 @@ export default function App() {
           <li>Rainfall is not shown. The rainfall values in this source looked implausible and shifted in recent years, so they are not reliable for trends.</li>
         </ul>
       </details>
+
+      <section className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <h2 className="text-lg font-semibold text-slate-900">Want the full method?</h2>
+        <p className="mt-1 text-sm text-slate-700">The data we used, how each trend and test is calculated, the checks, and how to read the results.</p>
+        <p className="mt-3"><a href="#method" className={BTN_FILL}>Read the method and data</a></p>
+      </section>
 
       <p className="mt-4 text-sm text-slate-600">Data: NASA POWER (MERRA-2). Built by team GitGoblins for NASA Space Apps Challenge 2026.</p>
     </main>
