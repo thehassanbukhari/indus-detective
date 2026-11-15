@@ -110,4 +110,4 @@ MIT, see [LICENSE](LICENSE). The data files in data/ and web/public/data/ are de
 
 ## Team
 
-Team GitGoblins, NASA Space Apps Challenge 2026, Topi (virtual). Team lead: Syed Hassan Ali Bukhari.
+Team GitGoblins, NASA Space Apps Challenge 2026, Topi (virtual).
