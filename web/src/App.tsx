@@ -38,6 +38,23 @@ function median(a: number[]) {
   return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
+// One choice out of a few, shown as big tappable chips. Native radio inputs, so keyboard and screen readers work without extra code.
+function Chips({ legend, name, value, options, onChange }: { legend: string; name: string; value: string; options: { id: string; label: string }[]; onChange: (id: string) => void }) {
+  return (
+    <fieldset className="min-w-0">
+      <legend className="mb-1.5 text-sm font-semibold text-slate-700">{legend}</legend>
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => (
+          <label key={o.id} className="cursor-pointer">
+            <input type="radio" name={name} value={o.id} checked={value === o.id} onChange={() => onChange(o.id)} className="peer sr-only" />
+            <span className="flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-4 text-base text-slate-800 hover:border-teal-600 peer-checked:border-teal-700 peer-checked:bg-teal-700 peer-checked:font-semibold peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-teal-700">{o.label}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 function Chart({ years, vals, slope, x0 }: { years: number[]; vals: number[]; slope: number; x0: number }) {
   const W = 560, H = 340, ml = 58, mr = 74, mt = 40, mb = 38;
   const y0 = Math.min(...vals) - 0.3, y1 = Math.max(...vals) + 0.3;
@@ -280,7 +297,6 @@ export default function App() {
   const vinfo = VARS.find((x) => x.id === v)!;
   const sinfo = SEASONS.find((x) => x.id === season)!;
   const jumpYear = brk(breaks, "T2M_MIN|annual")?.national.year;
-  const sel = "ml-2 min-h-11 rounded border border-slate-300 bg-white px-2";
 
   return (
     <main className="mx-auto max-w-3xl p-4 text-slate-800">
@@ -295,37 +311,27 @@ export default function App() {
 
       <Findings nat={nat} cells={cells} />
 
-      <div className="mt-4 flex flex-wrap gap-3">
-        <label className="text-sm">
-          Place
-          <select className={sel} value={cell.name} onChange={(e) => setName(e.target.value)}>
-            {cells.map((c) => (
-              <option key={c.name} value={c.name}>
-                {c.name}{c.aliases.length ? ` (also ${c.aliases.join(", ")})` : ""}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="text-sm">
-          Variable
-          <select className={sel} value={v} onChange={(e) => setV(e.target.value)}>
-            {VARS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-          </select>
-        </label>
-        <label className="text-sm">
-          Season
-          <select className={sel} value={season} onChange={(e) => setSeason(e.target.value)}>
-            {SEASONS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-          </select>
-        </label>
-        <label className="text-sm">
-          Years
-          <select className={sel} value={win} onChange={(e) => setWin(e.target.value)}>
-            {WINDOWS.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
-          </select>
-        </label>
-      </div>
-      <p className="mt-2 text-sm text-slate-600">{vinfo.def} Each point is the average for {sinfo.label.toLowerCase()} of one year.</p>
+      <section aria-labelledby="explore-h" className="mt-6 rounded-xl border border-t-4 border-slate-200 border-t-teal-700 bg-slate-50 p-4 shadow-sm">
+        <h2 id="explore-h" className="text-lg font-semibold text-slate-900">Explore any place</h2>
+        <p className="mt-1 text-sm text-slate-600">Choose a place, what to measure, a season and the years. The result and the chart below change with every choice.</p>
+        <div className="mt-4 grid gap-4">
+          <div>
+            <label htmlFor="place" className="mb-1.5 block text-sm font-semibold text-slate-700">Place</label>
+            <select id="place" className="min-h-12 w-full rounded-lg border border-slate-400 bg-white px-3 text-base text-slate-900" value={cell.name} onChange={(e) => setName(e.target.value)}>
+              {cells.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name}{c.aliases.length ? ` (also ${c.aliases.join(", ")})` : ""}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-sm text-slate-600">{cells.length} places. You can also tap a dot on the map further down.</p>
+          </div>
+          <Chips legend="What to measure" name="variable" value={v} options={VARS} onChange={setV} />
+          <Chips legend="Season" name="season" value={season} options={SEASONS} onChange={setSeason} />
+          <Chips legend="Years" name="years" value={win} options={WINDOWS} onChange={setWin} />
+        </div>
+      </section>
+      <p className="mt-3 text-sm text-slate-600">{vinfo.def} Each point is the average for {sinfo.label.toLowerCase()} of one year.</p>
       {win === "1998" && (
         <p className="mt-1 text-sm text-slate-600">This view starts after a <Term word="level jump">{GLOSS.jump}</Term> near {jumpYear} that the <Term word="break check">{GLOSS.breakCheck}</Term> found in the national series, so the jump does not count as a trend.</p>
       )}
