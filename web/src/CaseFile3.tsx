@@ -35,21 +35,11 @@ export default function CaseFile3({ nat, cells, series, breaks }: { nat: Nat; ce
     <section className="mt-6">
       <h2 className="text-lg font-semibold">Case file 3: summer daytime highs, July to September</h2>
       <p className="mt-1 text-sm text-slate-600">
-        Are summer days getting hotter or cooler? National average of our 38 grid cells. The chart shows change from each line's own 1981 to 1990 average.
+        Are summer days getting hotter or cooler? National average of our 38 grid cells. Lines show change from each line's own 1981 to 1990 average.
       </p>
-      {bMax && bMin && (
-        <div className="mt-2 rounded border border-sky-300 bg-sky-50 p-3 text-sm text-slate-800">
-          <p className="font-semibold">
-            {stepYear !== undefined
-              ? `How to read this chart: the summer daytime high series has a level step near ${stepYear}, shared by ${bMax.top_years[0][1]} of ${bMax.cells} places.`
-              : "How to read this chart: the summer series and its level steps."}
-          </p>
-          <ul className="mt-1 list-disc space-y-1 pl-5">
-            <li>{breakSentence(bMax, "Summer daytime high")}</li>
-            <li>{breakSentence(bMin, "Summer night time low")}</li>
-          </ul>
-        </div>
-      )}
+      <p className="mt-3 text-base font-semibold text-slate-900">
+        {sigDown} of {ts.length} places have falling summer daytime highs that pass the strict test{sigUp ? `, ${sigUp} rise and pass it` : ""}. The national average is {fmt(mx.slope)} {"\u00B0C"} per decade, {verdictLabel(mx)}.
+      </p>
       <div className="mt-2 rounded border border-slate-200 p-2">
         <TwoLines
           label="Jul to Sep daytime high and night time low, national average change since 1981 to 1990"
@@ -59,50 +49,63 @@ export default function CaseFile3({ nat, cells, series, breaks }: { nat: Nat; ce
             { label: "Night time low", color: "#2563eb", years: dMin.years, vals: dMin.vals, slope: mn.slope },
           ]}
         />
-        <p className="px-2 pb-1 text-sm text-slate-700">
-          Orange: daytime high. Blue: night time low. Jul to Sep values are solid, straight line trends are dashed.
-        </p>
+        <div className="px-2 pb-1 text-sm text-slate-700">
+          {stepYear !== undefined && bMax ? (
+            <p>The summer daytime high series has a level jump near {stepYear}, shared by {bMax.top_years[0][1]} of {bMax.cells} places (descriptive). Dashed lines are straight line trends.</p>
+          ) : (
+            <p>Jul to Sep values are solid, straight line trends are dashed.</p>
+          )}
+        </div>
       </div>
-      <div className="mt-3 overflow-x-auto rounded border border-slate-200">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-sm text-slate-600">
-            <tr>
-              <th className="p-2">Jul to Sep change per decade</th>
-              {WINDOWS.map((w) => <th key={w.sfx} className="p-2">{w.label}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {ROWS.map((r) => (
-              <tr key={r.id} className="border-t border-slate-200 align-top">
-                <td className="p-2">{r.label}</td>
-                {WINDOWS.map((w) => {
-                  const t = nat[`${r.id}|JAS${w.sfx}`];
-                  return (
-                    <td key={w.sfx} className="p-2">
-                      {t ? `${fmt(t.slope)} (${fmt(t.lo)} to ${fmt(t.hi)}) \u00B0C` : ""}
-                      <br />
-                      <span className="text-sm text-slate-600">{t ? verdictLabel(t) : ""}</span>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
-        <li>
-          Daytime high, 1981 to 2025: falling in {falling} of {ts.length} places. {sigDown} fall and pass the strict test{sigUp ? `, ${sigUp} rise and pass it` : ""}.{steep ? ` Steepest place: ${steep.name}, ${fmt(steep.t.slope)} (${fmt(steep.t.lo)} to ${fmt(steep.t.hi)}) \u00B0C per decade.` : ""}
-        </li>
-        {steep && (
-          <li>
-            PMD report (2026) as reported in press: the maximum temperature falls by up to {PMD_SUMMER.toFixed(1)} {"\u00B0C"} per decade in summer and winter in some areas. PMD links part of the decline to extra monsoon cloud, which is PMD's explanation. The steepest NASA place for the summer daytime high, {steep.name}, shows {fmt(steep.t.slope)} {"\u00B0C"}, a {Math.abs(steep.t.slope) > PMD_SUMMER ? "larger" : "smaller"} fall than that figure. A single steepest cell among 38 is a maximum, so its range is a loose guide.
-          </li>
+      <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
+        <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Numbers and checks</summary>
+        {bMax && bMin && (
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
+            <li>{breakSentence(bMax, "Summer daytime high")}</li>
+            <li>{breakSentence(bMin, "Summer night time low")}</li>
+          </ul>
         )}
-        <li>
-          Values are a 50 km reanalysis, not weather stations.
-        </li>
-      </ul>
+        <div className="mt-3 overflow-x-auto rounded border border-slate-200">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-sm text-slate-600">
+              <tr>
+                <th className="p-2">Jul to Sep change per decade</th>
+                {WINDOWS.map((w) => <th key={w.sfx} className="p-2">{w.label}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {ROWS.map((r) => (
+                <tr key={r.id} className="border-t border-slate-200 align-top">
+                  <td className="p-2">{r.label}</td>
+                  {WINDOWS.map((w) => {
+                    const t = nat[`${r.id}|JAS${w.sfx}`];
+                    return (
+                      <td key={w.sfx} className="p-2">
+                        {t ? `${fmt(t.slope)} (${fmt(t.lo)} to ${fmt(t.hi)}) \u00B0C` : ""}
+                        <br />
+                        <span className="text-sm text-slate-600">{t ? verdictLabel(t) : ""}</span>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-700">
+          <li>
+            Daytime high, 1981 to 2025: falling in {falling} of {ts.length} places. {sigDown} fall and pass the strict test{sigUp ? `, ${sigUp} rise and pass it` : ""}.{steep ? ` Steepest place: ${steep.name}, ${fmt(steep.t.slope)} (${fmt(steep.t.lo)} to ${fmt(steep.t.hi)}) \u00B0C per decade.` : ""}
+          </li>
+          {steep && (
+            <li>
+              PMD report (2026) as reported in press: the maximum temperature falls by up to {PMD_SUMMER.toFixed(1)} {"\u00B0C"} per decade in summer and winter in some areas. PMD links part of the decline to extra monsoon cloud, which is PMD's explanation. The steepest NASA place for the summer daytime high, {steep.name}, shows {fmt(steep.t.slope)} {"\u00B0C"}, a {Math.abs(steep.t.slope) > PMD_SUMMER ? "larger" : "smaller"} fall than that figure. A single steepest cell among 38 is a maximum, so its range is a loose guide.
+            </li>
+          )}
+          <li>
+            Values are a 50 km reanalysis, not weather stations.
+          </li>
+        </ul>
+      </details>
     </section>
   );
 }

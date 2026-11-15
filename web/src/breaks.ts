@@ -31,3 +31,8 @@ export function breakSentence(k: Brk, what: string): string {
 
 export const CAUSE_NOTE =
   "NASA\u2019s reanalysis team documents that new satellite instruments entering the analysis can create level shifts in reanalysis series, and names an instrument change in 1998. In our data the step appears in nearly every place at once, between mid 1997 and early 1998 in a month by month scan, so trends since 1998 are shown next to the full period.";
+
+// The window the break rule above counts ("in_1996_1999"), and the V2 sourced sentence for it.
+export const STEP_FROM = 1996, STEP_TO = 1999;
+export const STEP_DOC =
+  "NASA\u2019s reanalysis team documents that new satellite instruments entering the analysis can create level shifts, and names an instrument change in 1998.";

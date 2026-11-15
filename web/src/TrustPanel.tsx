@@ -90,3 +90,23 @@ export default function TrustPanel({ nat, breaks }: { nat: Nat; breaks: BreaksFi
     </section>
   );
 }
+
+// Short version for the main page. The full grade table, tests and sources stay on the method page.
+export function TrustSummary({ nat, breaks }: { nat: Nat; breaks: BreaksFile }) {
+  const all = SEAS.flatMap(([s, sl]) => VARS.map(([v, vl]) => ({ t: nat[`${v}|${s}`], name: `${vl.toLowerCase()}, ${sl}` })));
+  const sig = all.filter((x) => x.t && verdict(x.t) === "yes");
+  const hand = HAND_CHECK === "passed"
+    ? "Stored values were compared with NASA\u2019s own Data Access Viewer for 5 places and 30 daily values. All matched."
+    : HAND_CHECK === "mismatch" ? "At least one value did not match the POWER viewer, so every grade is capped at 1 of 3 checks." : "Under way.";
+  return (
+    <section className="mt-6">
+      <h2 className="text-lg font-semibold">How solid is each finding?</h2>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-700">
+        <li>{hand}</li>
+        <li>{sig.length} of {all.length} national trends are statistically significant over 1981 to 2025{sig.length ? `: ${sig.map((x) => x.name).join(" and ")}` : ""}. The other {all.length - sig.length} are not.</li>
+        <li>Values come from a reanalysis model, not weather stations, so the 1998 to 2025 view is shown next to the full period.</li>
+      </ul>
+      <p className="mt-1"><a href="#method" className="inline-flex min-h-11 items-center text-sm text-teal-700 underline">Grades by checks passed, tests and sources are on the method page</a></p>
+    </section>
+  );
+}

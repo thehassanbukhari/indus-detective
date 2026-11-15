@@ -3,8 +3,8 @@ import PmdPanel, { type Nat, type Gist } from "./PmdPanel";
 import CaseFile1 from "./CaseFile1";
 import CaseFile2 from "./CaseFile2";
 import CaseFile3 from "./CaseFile3";
-import TrustPanel from "./TrustPanel";
-import SourcesPanel, { REPO } from "./SourcesPanel";
+import { TrustSummary } from "./TrustPanel";
+import { REPO } from "./SourcesPanel";
 import Findings from "./Findings";
 import Method, { BTN_OUT, BTN_FILL } from "./Method";
 import { Term, GLOSS } from "./Term";
@@ -380,9 +380,7 @@ export default function App() {
 
       <PmdPanel nat={nat} cells={cells} gist={gist} />
 
-      <TrustPanel nat={nat} breaks={breaks} />
-
-      <SourcesPanel gist={!!gist} />
+      <TrustSummary nat={nat} breaks={breaks} />
 
       <details className="mt-6 rounded border border-slate-200 p-3 text-sm">
         <summary className="cursor-pointer py-2 font-semibold">About this data and its limits</summary>
@@ -392,14 +390,14 @@ export default function App() {
           <li>Values are averages of daily highs, daily lows and daily means. Monthly extremes are not used.</li>
           <li>Trend: Theil Sen slope with a 95% range from a block bootstrap. Tests in our own checks show these ranges are slightly too narrow (roughly 80 to 87 in 100 cover the truth, not 95).</li>
           <li>Significant means the change passes a test that accounts for many correlated years and for checking 38 places at once, and its range excludes zero.</li>
-          <li>{`The national night time low shows a level jump near ${jumpYear}. NASA\u2019s reanalysis team documents that new satellite instruments entering the analysis can create level shifts in reanalysis series, and names an instrument change in 1998, so the 1998 to 2025 view is offered next to the full period. See the trust panel for the break check.`}</li>
+          <li>{`The national night time low shows a level jump near ${jumpYear}. NASA\u2019s reanalysis team documents that new satellite instruments entering the analysis can create level shifts in reanalysis series, and names an instrument change in 1998, so the 1998 to 2025 view is offered next to the full period. See the method page for the break check.`}</li>
           <li>Rainfall is not shown. The rainfall values in this source looked implausible and shifted in recent years, so they are not reliable for trends.</li>
         </ul>
       </details>
 
       <section className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4">
         <h2 className="text-lg font-semibold text-slate-900">Want the full method?</h2>
-        <p className="mt-1 text-sm text-slate-700">The data we used, how each trend and test is calculated, the checks, and how to read the results.</p>
+        <p className="mt-1 text-sm text-slate-700">The data we used, how each trend and test is calculated, the grade for each finding, the sources, and how to read the results.</p>
         <p className="mt-3"><a href="#method" className={BTN_FILL}>Read the method and data</a></p>
       </section>
 

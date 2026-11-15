@@ -142,7 +142,7 @@ export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLi
           </li>
         )}
         <li>
-          These are straight line trends over 1981 to 2025. They are not steady warming: the break check in the trust panel found level jumps in the yearly series.
+          These are straight line trends over 1981 to 2025. The break check found level steps in some yearly series, so read each trend as the average change over the period.
         </li>
         <li>
           Differences are shown as found. A 50 km reanalysis grid and ground stations measure different things, and our national average is a plain average of the 38 cells, not weighted by area.

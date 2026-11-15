@@ -1,5 +1,5 @@
 import { PMD, verdict, verdictLabel } from "./PmdPanel";
-import { brk, breakKind, breakSentence, CAUSE_NOTE, type BreaksFile } from "./breaks";
+import { brk, breakKind, breakSentence, CAUSE_NOTE, STEP_FROM, STEP_TO, STEP_DOC, type BreaksFile } from "./breaks";
 
 type T = { slope: number; lo: number; hi: number; p: number; n: number };
 type Nat = Record<string, T>;
@@ -31,9 +31,9 @@ export function national(series: Series, key: string) {
   return { years, vals: vals.map((v) => v - b) };
 }
 
-type Line = { label: string; color: string; years: number[]; vals: number[]; slope: number };
+type Line = { label: string; color: string; years: number[]; vals: number[]; slope: number; levels?: boolean };
 
-export function TwoLines({ lines, jumpYear, label = "Daytime high and night time low, national average change since 1981 to 1990" }: { lines: Line[]; jumpYear?: number; label?: string }) {
+export function TwoLines({ lines, jumpYear, band, label = "Daytime high and night time low, national average change since 1981 to 1990" }: { lines: Line[]; jumpYear?: number; band?: { from: number; to: number; text: string }; label?: string }) {
   const W = 560, H = 340, ml = 58, mr = 100, mt = 40, mb = 38;
   const all = lines.flatMap((l) => l.vals);
   const y0 = Math.min(...all) - 0.3, y1 = Math.max(...all) + 0.3;
@@ -59,6 +59,12 @@ export function TwoLines({ lines, jumpYear, label = "Daytime high and night time
       {[1985, 1995, 2005, 2015, 2025].map((t) => (
         <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="17" fill="#475569">{t}</text>
       ))}
+      {band && (
+        <>
+          <rect x={sx(band.from - 0.5)} y={mt} width={sx(band.to + 0.5) - sx(band.from - 0.5)} height={H - mt - mb} fill="#cbd5e1" opacity="0.45" />
+          <text x={sx(band.from - 0.5)} y={mt - 8} fontSize="15" fill="#475569">{band.text}</text>
+        </>
+      )}
       {jumpYear !== undefined && (
         <>
           <line x1={sx(jumpYear - 0.5)} x2={sx(jumpYear - 0.5)} y1={mt} y2={H - mb} stroke="#94a3b8" strokeDasharray="3 3" />
@@ -71,6 +77,17 @@ export function TwoLines({ lines, jumpYear, label = "Daytime high and night time
         const path = l.years.map((x, i) => `${i ? "L" : "M"}${sx(x).toFixed(1)},${sy(l.vals[i]).toFixed(1)}`).join(" ");
         return (
           <g key={l.label}>
+            {band && l.levels && (() => {
+              const pre = l.vals.filter((_, i) => l.years[i] < band.from), post = l.vals.filter((_, i) => l.years[i] > band.to);
+              if (!pre.length || !post.length) return null;
+              const m0 = pre.reduce((a, x) => a + x, 0) / pre.length, m1 = post.reduce((a, x) => a + x, 0) / post.length;
+              return (
+                <>
+                  <line x1={sx(1981)} x2={sx(band.from - 0.5)} y1={sy(m0)} y2={sy(m0)} stroke={l.color} strokeWidth="7" strokeOpacity="0.28" />
+                  <line x1={sx(band.to + 0.5)} x2={sx(2025)} y1={sy(m1)} y2={sy(m1)} stroke={l.color} strokeWidth="7" strokeOpacity="0.28" />
+                </>
+              );
+            })()}
             <path d={path} fill="none" stroke={l.color} strokeWidth="2.5" />
             <line x1={sx(1981)} y1={sy(k * 1981 + b)} x2={sx(2025)} y2={sy(k * 2025 + b)} stroke={l.color} strokeWidth="2.5" strokeDasharray="7 5" />
           </g>
@@ -112,81 +129,92 @@ export default function CaseFile1({ nat, cells, series, breaks }: { nat: Nat; ce
   const bMin = brk(breaks, "T2M_MIN|annual"), bMax = brk(breaks, "T2M_MAX|annual");
   const kMin = bMin ? breakKind(bMin) : undefined;
   const lateMin = nat["T2M_MIN|annual@1998"];
-  const mostlyJump = kMin === "one" && !!lateMin && verdict(lateMin) !== "yes";
+  const showStep = kMin === "one" && !!bMin;
   const pmdMax = PMD.find((x) => x.id === "T2M_MAX"), pmdMin = PMD.find((x) => x.id === "T2M_MIN");
   return (
     <section className="mt-6">
       <h2 className="text-lg font-semibold">Case file 1: nights versus days</h2>
       <p className="mt-1 text-sm text-slate-600">
-        Is the night time low changing differently from the daytime high? National average of our 38 grid cells. The chart shows change from each line's own 1981 to 1990 average.
+        Is the night time low changing differently from the daytime high? National average of our 38 grid cells. Lines show change from each line's own 1981 to 1990 average.
       </p>
-      {bMin && bMax && (
-        <div className="mt-2 rounded border border-sky-300 bg-sky-50 p-3 text-sm text-slate-800">
-          <p className="font-semibold">
-            {mostlyJump ? `How to read this chart: most of the night low rise is one step near ${bMin.national.year}, not steady warming.` : "How to read this chart: the yearly series and its level steps."}
-          </p>
-          <ul className="mt-1 list-disc space-y-1 pl-5">
+      <p className="mt-3 text-base font-semibold text-slate-900">
+        Night time lows: {fmt(mn.slope)} {"\u00B0C"} per decade, {verdictLabel(mn)}. Daytime highs: {fmt(mx.slope)} {"\u00B0C"} per decade, {verdictLabel(mx)}.
+      </p>
+      <div className="mt-2 rounded border border-slate-200 p-2">
+        <TwoLines
+          band={showStep ? { from: STEP_FROM, to: STEP_TO, text: `Step window ${STEP_FROM} to ${STEP_TO}` } : undefined}
+          lines={[
+            { label: "Daytime high", color: "#ea580c", years: dMax.years, vals: dMax.vals, slope: mx.slope },
+            { label: "Night time low", color: "#2563eb", years: dMin.years, vals: dMin.vals, slope: mn.slope, levels: true },
+          ]}
+        />
+        <div className="space-y-1 px-2 pb-1 text-sm text-slate-700">
+          {showStep && bMin ? (
+            <>
+              <p>Shaded: the step window, {STEP_FROM} to {STEP_TO}. {bMin.in_1996_1999} of {bMin.cells} places have their night low level jump inside it, median {fmt(bMin.median_size)} {"\u00B0C"}. Pale bars: average level before and after. Dashed: straight line trends.</p>
+              <p>{STEP_DOC}{lateMin ? ` Since 1998 the night low trend is ${fmt(lateMin.slope)} (${fmt(lateMin.lo)} to ${fmt(lateMin.hi)}) \u00B0C per decade, ${verdictLabel(lateMin)}.` : ""}</p>
+            </>
+          ) : (
+            <p>Yearly values are solid, straight line trends are dashed.</p>
+          )}
+        </div>
+      </div>
+      <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
+        <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Numbers and checks</summary>
+        {bMin && bMax && (
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
             <li>{breakSentence(bMin, "Night time low")}</li>
             <li>{breakSentence(bMax, "Daytime high")}{bMax.national.year !== bMin.national.year ? " The daytime high has a different break year from the night low." : ""}</li>
             {lateMin && <li>From 1998 to 2025, after the night low jump, its trend is {fmt(lateMin.slope)} ({fmt(lateMin.lo)} to {fmt(lateMin.hi)}) {"\u00B0C"} per decade, {verdictLabel(lateMin)}. The 1998 to 2025 view is the cleaner view of what happened since the jump.</li>}
             {kMin === "one" && <li>{CAUSE_NOTE}</li>}
           </ul>
-        </div>
-      )}
-      <div className="mt-2 rounded border border-slate-200 p-2">
-        <TwoLines jumpYear={kMin === "one" && bMin ? bMin.national.year : undefined} lines={[
-          { label: "Daytime high", color: "#ea580c", years: dMax.years, vals: dMax.vals, slope: mx.slope },
-          { label: "Night time low", color: "#2563eb", years: dMin.years, vals: dMin.vals, slope: mn.slope },
-        ]} />
-        <p className="px-2 pb-1 text-sm text-slate-700">
-          Orange: daytime high. Blue: night time low. Yearly values are solid, straight line trends are dashed.
-        </p>
-      </div>
-      <div className="mt-3 overflow-x-auto rounded border border-slate-200">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-sm text-slate-600">
-            <tr>
-              <th className="p-2">Change per decade</th>
-              {windows.map((w) => <th key={w.sfx} className="p-2">{w.label}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r) => (
-              <tr key={r.id} className="border-t border-slate-200 align-top">
-                <td className="p-2">{r.label}</td>
-                {windows.map((w) => {
-                  const t = nat[`${r.id}|annual${w.sfx}`];
-                  return (
-                    <td key={w.sfx} className="p-2">
-                      {t ? `${fmt(t.slope)} (${fmt(t.lo)} to ${fmt(t.hi)}) \u00B0C` : ""}
-                      <br />
-                      <span className="text-sm text-slate-600">{t ? verdictLabel(t) : ""}</span>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700">
-        {windows.map((w) => {
-          const c = count(w.sfx);
-          return (
-            <li key={w.sfx}>
-              {w.label}: {sentence(w.sfx)} In {c.k} of {c.m} places the night low trend is higher than the daytime high trend.
-            </li>
-          );
-        })}
-        {pmdMax && pmdMin && (
-          <li>
-            PMD report (2026) as reported in press, 1981 to 2025: night low {fmt(pmdMin.value)}, daytime high {fmt(pmdMax.value)} {"\u00B0C"} per decade.
-          </li>
         )}
-        <li>
-          A negative gap change means the gap between day and night is narrowing. The 1998 to 2025 view is shown next to the full period because of the level step near 1997 to 1998. Values are a 50 km reanalysis, not weather stations.
-        </li>
-      </ul>
+        <div className="mt-3 overflow-x-auto rounded border border-slate-200">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-sm text-slate-600">
+              <tr>
+                <th className="p-2">Change per decade</th>
+                {windows.map((w) => <th key={w.sfx} className="p-2">{w.label}</th>)}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-t border-slate-200 align-top">
+                  <td className="p-2">{r.label}</td>
+                  {windows.map((w) => {
+                    const t = nat[`${r.id}|annual${w.sfx}`];
+                    return (
+                      <td key={w.sfx} className="p-2">
+                        {t ? `${fmt(t.slope)} (${fmt(t.lo)} to ${fmt(t.hi)}) \u00B0C` : ""}
+                        <br />
+                        <span className="text-sm text-slate-600">{t ? verdictLabel(t) : ""}</span>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <ul className="mt-3 list-disc space-y-1 pl-5 text-slate-700">
+          {windows.map((w) => {
+            const c = count(w.sfx);
+            return (
+              <li key={w.sfx}>
+                {w.label}: {sentence(w.sfx)} In {c.k} of {c.m} places the night low trend is higher than the daytime high trend.
+              </li>
+            );
+          })}
+          {pmdMax && pmdMin && (
+            <li>
+              PMD report (2026) as reported in press, 1981 to 2025: night low {fmt(pmdMin.value)}, daytime high {fmt(pmdMax.value)} {"\u00B0C"} per decade.
+            </li>
+          )}
+          <li>
+            A negative gap change means the gap between day and night is narrowing. The 1998 to 2025 view is shown next to the full period because of the level step near 1997 to 1998. Values are a 50 km reanalysis, not weather stations.
+          </li>
+        </ul>
+      </details>
     </section>
   );
 }
