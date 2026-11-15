@@ -6,6 +6,7 @@ import CaseFile3 from "./CaseFile3";
 import TrustPanel from "./TrustPanel";
 import SourcesPanel from "./SourcesPanel";
 import Findings from "./Findings";
+import { Term, GLOSS } from "./Term";
 import { brk, type BreaksFile } from "./breaks";
 
 type Trend = { slope: number; lo: number; hi: number; p: number; n: number; sig: boolean };
@@ -98,7 +99,7 @@ function ResultCard({ t, title }: { t: Trend | null; title: string }) {
     <div id="selected-result" className={"mt-4 scroll-mt-4 rounded border border-l-4 border-slate-200 p-3 " + V3_BAR[key]}>
       <p className="text-sm text-slate-600">{title}</p>
       <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{fmt(t.slope)} {"\u00B0C"} per decade</p>
-      <p className="text-sm tabular-nums text-slate-600">95% range {fmt(t.lo)} to {fmt(t.hi)}</p>
+      <p className="text-sm tabular-nums text-slate-600"><Term word="95% range">{GLOSS.range}</Term> {fmt(t.lo)} to {fmt(t.hi)}</p>
       <p className="mt-2">
         <span className={"inline-block rounded-full border px-2.5 py-0.5 text-sm font-medium " + V3_BADGE[key]}>{V3_LABEL[key]}</span>
       </p>
@@ -200,10 +201,11 @@ function DotMap({ cells, tkey, selected, onPick }: { cells: Cell[]; tkey: string
       {sel && (
         <div className={"mx-2 mt-3 rounded border border-l-4 border-slate-200 p-3 " + V3_BAR[verdictOf(sel.t)]}>
           <p className="font-semibold text-slate-900">{sel.c.name}</p>
-          <p className="text-sm tabular-nums text-slate-700">{fmt(sel.t.slope)} {"\u00B0C"} per decade (95% range {fmt(sel.t.lo)} to {fmt(sel.t.hi)})</p>
+          <p className="text-sm tabular-nums text-slate-700">{fmt(sel.t.slope)} {"\u00B0C"} per decade (<Term word="95% range">{GLOSS.range}</Term> {fmt(sel.t.lo)} to {fmt(sel.t.hi)})</p>
           <p className="mt-1">
             <span className={"inline-block rounded-full border px-2.5 py-0.5 text-sm font-medium " + V3_BADGE[verdictOf(sel.t)]}>{V3_LABEL[verdictOf(sel.t)]}</span>
           </p>
+          <p className="mt-1 text-sm text-slate-700">{V3_MEAN[verdictOf(sel.t)]}</p>
           <button type="button" onClick={toResult} className="mt-1 flex min-h-11 items-center text-sm text-teal-700 underline">See its chart</button>
           {near.length > 0 && (
             <div>
@@ -278,7 +280,7 @@ export default function App() {
   const vinfo = VARS.find((x) => x.id === v)!;
   const sinfo = SEASONS.find((x) => x.id === season)!;
   const jumpYear = brk(breaks, "T2M_MIN|annual")?.national.year;
-  const sel = "ml-2 rounded border border-slate-300 p-1";
+  const sel = "ml-2 min-h-11 rounded border border-slate-300 bg-white px-2";
 
   return (
     <main className="mx-auto max-w-3xl p-4 text-slate-800">
@@ -288,7 +290,7 @@ export default function App() {
       </p>
 
       <p className="mt-4 max-w-2xl leading-relaxed text-slate-700">
-        We asked whether Pakistan's temperature has really changed since 1981. We used daily NASA MERRA-2 data for {cells.length} places{gist ? ", and NASA GISTEMP, a second NASA analysis built from weather stations and sea surface temperature, as a cross check for average temperature" : ""}. For each place we measured the change per decade and tested whether it is statistically significant. Then we compared the results with Pakistan's weather service (PMD).
+        We asked whether Pakistan's temperature has really changed since 1981. We used daily NASA MERRA-2 data for {cells.length} places{gist ? ", and NASA GISTEMP, a second NASA analysis built from weather stations and sea surface temperature, as a cross check for average temperature" : ""}. For each place we measured the change per decade and tested whether it is <Term word="statistically significant">{GLOSS.yes}</Term>. Then we compared the results with Pakistan's weather service (PMD).
       </p>
 
       <Findings nat={nat} cells={cells} />
@@ -325,7 +327,7 @@ export default function App() {
       </div>
       <p className="mt-2 text-sm text-slate-600">{vinfo.def} Each point is the average for {sinfo.label.toLowerCase()} of one year.</p>
       {win === "1998" && (
-        <p className="mt-1 text-sm text-slate-600">{`This view starts after a level jump near ${jumpYear} that the break check found in the national series, so the jump does not count as a trend.`}</p>
+        <p className="mt-1 text-sm text-slate-600">This view starts after a <Term word="level jump">{GLOSS.jump}</Term> near {jumpYear} that the <Term word="break check">{GLOSS.breakCheck}</Term> found in the national series, so the jump does not count as a trend.</p>
       )}
 
       <ResultCard t={t} title={`${cell.name}: ${vinfo.label}, ${sinfo.label}, ${win} to 2025`} />
@@ -338,14 +340,14 @@ export default function App() {
       {t && (
         <dl className="mt-4 grid gap-2 text-sm">
           <div><dt className="inline font-semibold">What: </dt><dd className="inline">{vinfo.label} change over time, {sinfo.label.toLowerCase()}.</dd></div>
-          <div><dt className="inline font-semibold">Where: </dt><dd className="inline">NASA grid cell around {cell.lat.toFixed(2)} N, {cell.lon.toFixed(2)} E, about 50 km wide. It is not a weather station.</dd></div>
+          <div><dt className="inline font-semibold">Where: </dt><dd className="inline">NASA <Term word="grid cell">{GLOSS.grid}</Term> around {cell.lat.toFixed(2)} N, {cell.lon.toFixed(2)} E, about 50 km wide. It is not a weather station.</dd></div>
         </dl>
       )}
 
       <section className="mt-6">
         <h2 className="text-lg font-semibold">Where is it changing?</h2>
         <p className="mt-1 text-sm text-slate-600">
-          One dot per NASA grid cell, coloured by the trend for the variable, season and years chosen above. Tap a dot to select that place. Its result appears under the map.
+          One dot per NASA <Term word="grid cell">{GLOSS.grid}</Term>, coloured by the trend for the variable, season and years chosen above. Tap a dot to select that place. Its result appears under the map.
         </p>
         <div ref={mapRef} className="mt-2 rounded border border-slate-200 p-2">
           <DotMap cells={cells} tkey={win === "1998" ? `${key}@1998` : key} selected={cell.name} onPick={pick} />
@@ -363,7 +365,7 @@ export default function App() {
       <SourcesPanel gist={!!gist} />
 
       <details className="mt-6 rounded border border-slate-200 p-3 text-sm">
-        <summary className="cursor-pointer font-semibold">About this data and its limits</summary>
+        <summary className="cursor-pointer py-2 font-semibold">About this data and its limits</summary>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
           <li>Source: NASA POWER daily data, built from the MERRA-2 reanalysis, 1981 to 2025. A reanalysis is a computer model constrained by observations, so trends can be affected by changes in the observing systems.</li>
           <li>Each place is a grid cell about 50 km wide. It is not a weather station, and nothing here is a district level finding.</li>

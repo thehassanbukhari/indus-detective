@@ -1,3 +1,4 @@
+import { Term, GLOSS } from "./Term";
 // PMD numbers are the press reported figures. If the PMD PDF is found, replace the values below with the exact figures and page numbers.
 type T = { slope: number; lo: number; hi: number; p: number; n: number };
 export type Nat = Record<string, T>;
@@ -126,7 +127,7 @@ export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLi
                 : `Since 1998 both trends have the same sign: MERRA-2 ${fmt(mer98.slope)} and GISTEMP ${fmt(g98.slope)} \u00B0C per decade.`}
             </li>
             <li>
-              Both are shown as found. MERRA-2 is a reanalysis on a 50 km grid, GISTEMP is a 2 degree analysis of station and sea surface records, and the two cell sets differ. Credit: NASA GISS/GISTEMP.
+              Both are shown as found. MERRA-2 is a <Term word="reanalysis">{GLOSS.reanalysis}</Term> on a 50 km grid, GISTEMP is a 2 degree analysis of station and sea surface records, and the two cell sets differ. Credit: NASA GISS/GISTEMP.
             </li>
           </ul>
         </div>

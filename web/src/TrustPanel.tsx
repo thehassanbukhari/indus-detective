@@ -73,13 +73,13 @@ export default function TrustPanel({ nat, breaks }: { nat: Nat; breaks: BreaksFi
         <li>Hand check against the NASA POWER viewer: {handText}</li>
       </ul>
       <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
-        <summary className="cursor-pointer font-semibold">Break check details</summary>
+        <summary className="cursor-pointer py-2 font-semibold">Break check details</summary>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
           {BK.map(([k, l]) => { const b = brk(breaks, k); return b ? <li key={k}>{breakSentence(b, l)}</li> : null; })}
         </ul>
       </details>
       <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
-        <summary className="cursor-pointer font-semibold">How the grade is decided</summary>
+        <summary className="cursor-pointer py-2 font-semibold">How the grade is decided</summary>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
           <li>Check 1: the 1981 to 2025 national trend is statistically significant (range excludes zero and p below 0.05). If not, the grade is No clear trend over 1981 to 2025.</li>
           <li>Check 2: the 1998 to 2025 trend is also significant with the same sign.</li>

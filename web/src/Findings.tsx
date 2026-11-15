@@ -1,3 +1,4 @@
+import { Term, GLOSS } from "./Term";
 import { PMD, verdict, verdictLabel, type Nat, type Verdict } from "./PmdPanel";
 
 type CellLite = { name: string; trends: Record<string, { slope: number; sig: boolean } | null> };
@@ -93,7 +94,7 @@ export default function Findings({ nat, cells }: { nat: Nat; cells: CellLite[] }
         {top.map((f, i) => (
           <div key={i} className={"border-l-4 pl-4 " + BAR[f.v]}>
             <h2 className="text-2xl font-semibold leading-snug tracking-tight text-slate-900 sm:text-3xl">{f.head}</h2>
-            <p className={"mt-1 text-sm " + VCLS[f.v]}>National average: {VTXT[f.v]}</p>
+            <p className={"mt-1 text-sm " + VCLS[f.v]}>National average: <Term word={VTXT[f.v]}>{GLOSS[f.v]}</Term></p>
           </div>
         ))}
       </div>
@@ -104,7 +105,7 @@ export default function Findings({ nat, cells }: { nat: Nat; cells: CellLite[] }
             {more.map((f, i) => (
               <li key={i}>
                 <p className="font-semibold text-slate-900">{f.head}</p>
-                <p className={"text-sm " + VCLS[f.v]}>National average: {VTXT[f.v]}</p>
+                <p className={"text-sm " + VCLS[f.v]}>National average: <Term word={VTXT[f.v]}>{GLOSS[f.v]}</Term></p>
               </li>
             ))}
           </ul>
