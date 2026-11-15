@@ -38,7 +38,7 @@ function median(a: number[]) {
 }
 
 function Chart({ years, vals, slope, x0 }: { years: number[]; vals: number[]; slope: number; x0: number }) {
-  const W = 640, H = 320, ml = 60, mr = 16, mt = 34, mb = 36;
+  const W = 560, H = 340, ml = 58, mr = 74, mt = 40, mb = 38;
   const y0 = Math.min(...vals) - 0.3, y1 = Math.max(...vals) + 0.3;
   const sx = (x: number) => ml + ((x - x0) / (2025 - x0)) * (W - ml - mr);
   const sy = (y: number) => H - mb - ((y - y0) / (y1 - y0)) * (H - mt - mb);
@@ -47,21 +47,61 @@ function Chart({ years, vals, slope, x0 }: { years: number[]; vals: number[]; sl
   const line = years.map((x, i) => `${i ? "L" : "M"}${sx(x).toFixed(1)},${sy(vals[i]).toFixed(1)}`).join(" ");
   const yt = Array.from({ length: 5 }, (_, i) => y0 + ((y1 - y0) * i) / 4);
   const xt = x0 === 1981 ? [1985, 1995, 2005, 2015, 2025] : [2000, 2005, 2010, 2015, 2020, 2025];
+  // Direct labels at the right end of the two lines, pushed apart when the lines end close together.
+  const yEnd = sy(vals[vals.length - 1]), yTr = sy(k * 2025 + b);
+  const yHi = Math.min(yEnd, yTr), yLo = Math.max(yEnd, yTr);
+  const spread = Math.max(0, 26 - (yLo - yHi)) / 2;
+  const clamp = (y: number) => Math.min(H - mb - 2, Math.max(mt + 8, y));
+  const seriesHigher = yEnd <= yTr;
+  const yS = clamp((seriesHigher ? yHi - spread : yLo + spread) + 6);
+  const yT = clamp((seriesHigher ? yLo + spread : yHi - spread) + 6);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto">
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Yearly values with a straight line trend">
+      <text x={ml} y={18} fontSize="17" fill="#475569">Temperature in {"\u00B0C"}</text>
       {yt.map((t) => (
         <g key={t}>
           <line x1={ml} x2={W - mr} y1={sy(t)} y2={sy(t)} stroke="#e2e8f0" />
-          <text x={ml - 6} y={sy(t) + 4} textAnchor="end" fontSize="15" fill="#64748b">{t.toFixed(1)}</text>
+          <text x={ml - 6} y={sy(t) + 5} textAnchor="end" fontSize="17" fill="#475569">{t.toFixed(1)}</text>
         </g>
       ))}
       {xt.map((t) => (
-        <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="15" fill="#64748b">{t}</text>
+        <text key={t} x={sx(t)} y={H - 10} textAnchor="middle" fontSize="17" fill="#475569">{t}</text>
       ))}
-      <text x={ml - 6} y={16} textAnchor="end" fontSize="15" fill="#64748b">{"\u00B0C"}</text>
-      <path d={line} fill="none" stroke="#0f766e" strokeWidth="2" />
-      <line x1={sx(x0)} y1={sy(k * x0 + b)} x2={sx(2025)} y2={sy(k * 2025 + b)} stroke="#dc2626" strokeWidth="2" strokeDasharray="6 4" />
+      <path d={line} fill="none" stroke="#0f766e" strokeWidth="2.5" />
+      <line x1={sx(x0)} y1={sy(k * x0 + b)} x2={sx(2025)} y2={sy(k * 2025 + b)} stroke="#dc2626" strokeWidth="2.5" strokeDasharray="7 5" />
+      <text x={sx(2025) + 8} y={yS} fontSize="17" fontWeight="600" fill="#0f766e">Yearly</text>
+      <text x={sx(2025) + 8} y={yT} fontSize="17" fontWeight="600" fill="#b91c1c">Trend</text>
     </svg>
+  );
+}
+
+type V3 = "yes" | "inconclusive" | "no";
+const V3_LABEL: Record<V3, string> = { yes: "Statistically significant", inconclusive: "Not conclusive", no: "No clear trend" };
+const V3_MEAN: Record<V3, string> = {
+  yes: "It passes the strict test used when many places are compared at once.",
+  inconclusive: "The range excludes zero, but the change does not pass the strict test used when many places are compared at once.",
+  no: "The change could be natural variation.",
+};
+const V3_BAR: Record<V3, string> = { yes: "border-l-teal-600", inconclusive: "border-l-slate-500", no: "border-l-slate-300" };
+const V3_BADGE: Record<V3, string> = {
+  yes: "border-teal-300 bg-teal-50 text-teal-900",
+  inconclusive: "border-slate-300 bg-slate-100 text-slate-800",
+  no: "border-slate-300 bg-white text-slate-700",
+};
+
+function ResultCard({ t, title }: { t: Trend | null; title: string }) {
+  if (!t) return <p className="mt-4 text-sm">Not enough years for this view.</p>;
+  const key: V3 = t.sig ? "yes" : t.lo > 0 || t.hi < 0 ? "inconclusive" : "no";
+  return (
+    <div className={"mt-4 rounded border border-l-4 border-slate-200 p-3 " + V3_BAR[key]}>
+      <p className="text-sm text-slate-600">{title}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-slate-900">{fmt(t.slope)} {"\u00B0C"} per decade</p>
+      <p className="text-sm tabular-nums text-slate-600">95% range {fmt(t.lo)} to {fmt(t.hi)}</p>
+      <p className="mt-2">
+        <span className={"inline-block rounded-full border px-2.5 py-0.5 text-sm font-medium " + V3_BADGE[key]}>{V3_LABEL[key]}</span>
+      </p>
+      <p className="mt-1 text-sm text-slate-700">{V3_MEAN[key]}</p>
+    </div>
   );
 }
 
@@ -189,12 +229,6 @@ export default function App() {
   const vinfo = VARS.find((x) => x.id === v)!;
   const sinfo = SEASONS.find((x) => x.id === season)!;
   const jumpYear = brk(breaks, "T2M_MIN|annual")?.national.year;
-  const excludesZero = t ? t.lo > 0 || t.hi < 0 : false;
-  const sigText = !t ? "" : t.sig
-    ? "Yes. It passes the strict test used when many places are compared at once."
-    : excludesZero
-      ? "Not conclusive. The range excludes zero, but the change does not pass the strict test used when many places are compared at once."
-      : "No. The change could be natural variation.";
   const sel = "ml-2 rounded border border-slate-300 p-1";
 
   return (
@@ -245,20 +279,18 @@ export default function App() {
         <p className="mt-1 text-xs text-slate-500">{`This view starts after a level jump near ${jumpYear} that the break check found in the national series, so the jump does not count as a trend.`}</p>
       )}
 
-      <div className="mt-4 rounded border border-slate-200 p-2">
+      <ResultCard t={t} title={`${cell.name}: ${vinfo.label}, ${sinfo.label}, ${win} to 2025`} />
+
+      <div className="mt-3 rounded border border-slate-200 p-2">
         <Chart years={years} vals={vals} slope={t ? t.slope : 0} x0={x0} />
-        <p className="px-2 text-xs text-slate-500">Yearly values (teal) and the straight line trend (red dashed), {win} to 2025. The dashed line is a straight line fitted through the years, so it shows the overall direction.</p>
+        <p className="px-2 pb-1 text-sm text-slate-700">Teal: the yearly average. Red dashed: a straight line fitted through those years, which shows the overall direction.</p>
       </div>
 
-      {t ? (
+      {t && (
         <dl className="mt-4 grid gap-2 text-sm">
           <div><dt className="inline font-semibold">What: </dt><dd className="inline">{vinfo.label} change over time, {sinfo.label.toLowerCase()}.</dd></div>
           <div><dt className="inline font-semibold">Where: </dt><dd className="inline">NASA grid cell around {cell.lat.toFixed(2)} N, {cell.lon.toFixed(2)} E, about 50 km wide. It is not a weather station.</dd></div>
-          <div><dt className="inline font-semibold">How much: </dt><dd className="inline">{fmt(t.slope)} {"\u00B0C"} per decade (95% range {fmt(t.lo)} to {fmt(t.hi)}).</dd></div>
-          <div><dt className="inline font-semibold">Significant: </dt><dd className="inline">{sigText}</dd></div>
         </dl>
-      ) : (
-        <p className="mt-4 text-sm">Not enough years for this view.</p>
       )}
 
       <section className="mt-6">
