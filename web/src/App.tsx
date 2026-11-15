@@ -56,7 +56,7 @@ function Chart({ years, vals, slope, x0 }: { years: number[]; vals: number[]; sl
   const yS = clamp((seriesHigher ? yHi - spread : yLo + spread) + 6);
   const yT = clamp((seriesHigher ? yLo + spread : yHi - spread) + 6);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img" aria-label="Yearly values with a straight line trend">
+    <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-[600px]" role="img" aria-label="Yearly values with a straight line trend">
       <text x={ml} y={18} fontSize="17" fill="#475569">Temperature in {"\u00B0C"}</text>
       {yt.map((t) => (
         <g key={t}>
