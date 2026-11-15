@@ -5,7 +5,8 @@ import CaseFile2 from "./CaseFile2";
 import CaseFile3 from "./CaseFile3";
 import { TrustSummary } from "./TrustPanel";
 import { REPO } from "./SourcesPanel";
-import Findings from "./Findings";
+import Findings, { Hook, Asks } from "./Findings";
+import { Fold, ModeContext, ModeSwitch, type Mode } from "./Disclosure";
 import Method, { BTN_OUT, BTN_FILL } from "./Method";
 import { Term, GLOSS } from "./Term";
 import { brk, type BreaksFile } from "./breaks";
@@ -252,6 +253,7 @@ export default function App() {
   const [season, setSeason] = useState("annual");
   const [win, setWin] = useState("1981");
   const [err, setErr] = useState("");
+  const [mode, setMode] = useState<Mode>("concise");
   const mapRef = useRef<HTMLDivElement>(null);
   const keepTop = useRef<number | null>(null);
   const pick = (n: string) => {
@@ -310,6 +312,7 @@ export default function App() {
   if (method) return <Method nat={nat} cells={cells} breaks={breaks} gist={gist} />;
 
   return (
+    <ModeContext.Provider value={mode}>
     <main className="mx-auto max-w-3xl p-4 text-slate-800">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Indus Detective</h1>
@@ -319,11 +322,16 @@ export default function App() {
         How has Pakistan's temperature changed since 1981? Daily NASA data, 38 places, 45 years.
       </p>
 
-      <p className="mt-4 max-w-2xl leading-relaxed text-slate-700">
-        We asked whether Pakistan's temperature has really changed since 1981. We used daily NASA MERRA-2 data for {cells.length} places{gist ? ", and NASA GISTEMP, a second NASA analysis built from weather stations and sea surface temperature, as a cross check for average temperature" : ""}. For each place we measured the change per decade and tested whether it is <Term word="statistically significant">{GLOSS.yes}</Term>. Then we compared the results with Pakistan's weather service (PMD).
-      </p>
+      <ModeSwitch mode={mode} onChange={setMode} />
+      <Hook nat={nat} cells={cells} />
+      <Asks />
+      <p className="mt-3 text-sm text-slate-600">Tap a dotted word for its plain meaning. Tap a bar marked Show to open its numbers. Extended opens all of them.</p>
 
       <Findings nat={nat} cells={cells} />
+
+      <p className="mt-6 max-w-2xl text-sm leading-relaxed text-slate-600">
+        We asked whether Pakistan's temperature has really changed since 1981. We used daily NASA MERRA-2 data for {cells.length} places{gist ? ", and NASA GISTEMP, a second NASA analysis built from weather stations and sea surface temperature, as a cross check for average temperature" : ""}. For each place we measured the change per decade and tested whether it is <Term word="statistically significant">{GLOSS.yes}</Term>. Then we compared the results with Pakistan's weather service (PMD).
+      </p>
 
       <section aria-labelledby="explore-h" className="mt-6 rounded-xl border border-t-4 border-slate-200 border-t-teal-700 bg-slate-50 p-4 shadow-sm">
         <h2 id="explore-h" className="text-lg font-semibold text-slate-900">Explore any place</h2>
@@ -374,16 +382,15 @@ export default function App() {
         </div>
       </section>
 
-      <CaseFile1 nat={nat} cells={cells} series={series} breaks={breaks} />
-      <CaseFile2 nat={nat} cells={cells} series={series} breaks={breaks} />
-      <CaseFile3 nat={nat} cells={cells} series={series} breaks={breaks} />
+      <div id="case1"><CaseFile1 nat={nat} cells={cells} series={series} breaks={breaks} /></div>
+      <div id="case2"><CaseFile2 nat={nat} cells={cells} series={series} breaks={breaks} /></div>
+      <div id="case3"><CaseFile3 nat={nat} cells={cells} series={series} breaks={breaks} /></div>
 
-      <PmdPanel nat={nat} cells={cells} gist={gist} />
+      <div id="pmd"><PmdPanel nat={nat} cells={cells} gist={gist} /></div>
 
       <TrustSummary nat={nat} breaks={breaks} />
 
-      <details className="mt-6 rounded border border-slate-200 p-3 text-sm">
-        <summary className="cursor-pointer py-2 font-semibold">About this data and its limits</summary>
+      <Fold title="About this data and its limits">
         <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
           <li>Source: NASA POWER daily data, built from the MERRA-2 reanalysis, 1981 to 2025. A reanalysis is a computer model constrained by observations, so trends can be affected by changes in the observing systems.</li>
           <li>Each place is a grid cell about 50 km wide. It is not a weather station, and nothing here is a district level finding.</li>
@@ -393,7 +400,7 @@ export default function App() {
           <li>{`The national night time low shows a level jump near ${jumpYear}. NASA\u2019s reanalysis team documents that new satellite instruments entering the analysis can create level shifts in reanalysis series, and names an instrument change in 1998, so the 1998 to 2025 view is offered next to the full period. See the method page for the break check.`}</li>
           <li>Rainfall is not shown. The rainfall values in this source looked implausible and shifted in recent years, so they are not reliable for trends.</li>
         </ul>
-      </details>
+      </Fold>
 
       <section className="mt-8 rounded-xl border border-slate-200 bg-slate-50 p-4">
         <h2 className="text-lg font-semibold text-slate-900">Want the full method?</h2>
@@ -403,5 +410,6 @@ export default function App() {
 
       <p className="mt-4 text-sm text-slate-600">Data: NASA POWER (MERRA-2). Built by team GitGoblins for NASA Space Apps Challenge 2026. <a className="text-teal-700 underline" href={REPO} target="_blank" rel="noopener noreferrer">Source code on GitHub</a>.</p>
     </main>
+    </ModeContext.Provider>
   );
 }

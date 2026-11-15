@@ -1,3 +1,4 @@
+import { Fold } from "./Disclosure";
 import { PMD, verdict, verdictLabel } from "./PmdPanel";
 import { brk, breakKind, breakSentence, CAUSE_NOTE, STEP_FROM, STEP_TO, STEP_DOC, type BreaksFile } from "./breaks";
 
@@ -159,8 +160,7 @@ export default function CaseFile1({ nat, cells, series, breaks }: { nat: Nat; ce
           )}
         </div>
       </div>
-      <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
-        <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Numbers and checks</summary>
+      <Fold title="Numbers and checks">
         {bMin && bMax && (
           <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
             <li>{breakSentence(bMin, "Night time low")}</li>
@@ -214,7 +214,7 @@ export default function CaseFile1({ nat, cells, series, breaks }: { nat: Nat; ce
             A negative gap change means the gap between day and night is narrowing. The 1998 to 2025 view is shown next to the full period because of the level step near 1997 to 1998. Values are a 50 km reanalysis, not weather stations.
           </li>
         </ul>
-      </details>
+      </Fold>
     </section>
   );
 }

@@ -1,3 +1,4 @@
+import { Fold } from "./Disclosure";
 import { Term, GLOSS } from "./Term";
 // PMD numbers are the press reported figures. If the PMD PDF is found, replace the values below with the exact figures and page numbers.
 type T = { slope: number; lo: number; hi: number; p: number; n: number };
@@ -117,8 +118,7 @@ export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLi
         <PmdChart nat={nat} gist={gist} />
         <p className="px-2 pb-1 text-sm text-slate-700">Bars: the NASA 95% range for the national trend, from MERRA-2 and, for average temperature, GISTEMP. White dot: the NASA trend. Grey line: the PMD figure as reported in press. Dashed line: zero change.</p>
       </div>
-      <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
-        <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Numbers and sources</summary>
+      <Fold title="Numbers and sources">
       <div className="mt-2 overflow-x-auto rounded border border-slate-200">
         <table className="w-full text-left text-sm">
           <thead className="bg-slate-50 text-sm text-slate-600">
@@ -214,7 +214,7 @@ export default function PmdPanel({ nat, cells, gist }: { nat: Nat; cells: CellLi
           Differences are shown as found. A 50 km reanalysis grid and ground stations measure different things, and our national average is a plain average of the 38 cells, not weighted by area.
         </li>
       </ul>
-      </details>
+      </Fold>
     </section>
   );
 }

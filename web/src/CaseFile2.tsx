@@ -1,3 +1,4 @@
+import { Fold } from "./Disclosure";
 import { PMD, PMD_SPRING, verdict, verdictLabel } from "./PmdPanel";
 import { TwoLines, national } from "./CaseFile1";
 import { brk, breakKind, breakSentence, CAUSE_NOTE, STEP_FROM, STEP_TO, STEP_DOC, type BreaksFile } from "./breaks";
@@ -63,8 +64,7 @@ export default function CaseFile2({ nat, cells, series, breaks }: { nat: Nat; ce
           )}
         </div>
       </div>
-      <details className="mt-3 rounded border border-slate-200 p-3 text-sm">
-        <summary className="flex min-h-11 cursor-pointer items-center font-semibold">Numbers and checks</summary>
+      <Fold title="Numbers and checks">
         {bMin && bMax && (
           <ul className="mt-2 list-disc space-y-1 pl-5 text-slate-700">
             <li>{breakSentence(bMin, "Spring night time low")}</li>
@@ -120,7 +120,7 @@ export default function CaseFile2({ nat, cells, series, breaks }: { nat: Nat; ce
             Values are a 50 km reanalysis, not weather stations.
           </li>
         </ul>
-      </details>
+      </Fold>
     </section>
   );
 }

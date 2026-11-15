@@ -1,4 +1,5 @@
-import { useState, type ReactNode } from "react";
+import { useContext, useState, type ReactNode } from "react";
+import { ModeContext } from "./Disclosure";
 
 export const GLOSS = {
   grid: "one square of NASA's computer model map, about 50 km wide",
@@ -14,10 +15,12 @@ export const GLOSS = {
 // A hard word that opens its plain meaning in place when tapped.
 export function Term({ word, children }: { word: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
+  const ext = useContext(ModeContext) === "extended";
+  const show = open || ext;
   return (
     <>
-      <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="cursor-help underline decoration-teal-700 decoration-dotted underline-offset-4">{word}</button>
-      {open && <span className="mx-1 rounded bg-teal-50 px-1.5 py-0.5 text-sm text-teal-900">({children})</span>}
+      <button type="button" aria-expanded={show} onClick={() => setOpen(!open)} className="cursor-help underline decoration-teal-700 decoration-dotted underline-offset-4">{word}</button>
+      {show && <span className="mx-1 rounded bg-teal-50 px-1.5 py-0.5 text-sm text-teal-900">({children})</span>}
     </>
   );
 }
