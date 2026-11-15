@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+export const REPO = "https://github.com/thehassanbukhari/indus-detective";
+
 const L = ({ href, children }: { href: string; children: ReactNode }) => (
   <a className="text-teal-700 underline" href={href} target="_blank" rel="noopener noreferrer">{children}</a>
 );
@@ -21,10 +23,13 @@ export default function SourcesPanel({ gist }: { gist?: boolean }) {
           Pakistan Meteorological Department figures come from press coverage of its 2026 report on 45 years of climate change in Pakistan: <L href="https://www.geo.tv/latest/681138-pakistan-witnessing-faster-rise-in-night-temperatures-than-day-pmd">Geo News</L>, <L href="https://www.thenews.pk/print/1435219-pakistan-faces-frequent-climate-extremes">The News</L>, <L href="https://www.dawn.com/news/2042262">Dawn</L>.
         </li>
         <li>
-          Hand check: 5 places and 30 daily values from NASA's Data Access Viewer matched our stored numbers exactly (docs/HAND_CHECK.md in the project repository).
+          Hand check: 5 places and 30 daily values from NASA's Data Access Viewer matched our stored numbers exactly (<L href={`${REPO}/blob/main/docs/HAND_CHECK.md`}>docs/HAND_CHECK.md</L> in the project repository).
         </li>
         <li>
-          Built with React, Vite, Tailwind and TypeScript for the site, and Python with NumPy, SciPy, pymannkendall and requests for the data. Hosted on Vercel. No outside fonts, images or scripts are loaded.
+          Code and data: <L href={REPO}>github.com/thehassanbukhari/indus-detective</L>, released under the MIT license.
+        </li>
+        <li>
+          Built with React, Vite, Tailwind and TypeScript for the site, and Python with NumPy, SciPy, pymannkendall, netCDF4 and requests for the data. Hosted on Vercel. No outside fonts, images or scripts are loaded.
         </li>
       </ul>
     </section>

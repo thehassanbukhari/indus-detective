@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import PmdPanel, { type Nat, type Gist } from "./PmdPanel";
 import Findings from "./Findings";
 import TrustPanel from "./TrustPanel";
-import SourcesPanel from "./SourcesPanel";
+import SourcesPanel, { REPO } from "./SourcesPanel";
 import { type BreaksFile } from "./breaks";
 
 type CellLite = { name: string; trends: Record<string, { slope: number; sig: boolean } | null> };
@@ -108,7 +108,8 @@ export default function Method({ nat, cells, breaks, gist }: { nat: Nat; cells: 
       </ul>
 
       <H2 id="code" n={8}>Code and data</H2>
-      <P>Python scripts in the lab folder download the NASA data, compute the yearly series, the trends, the national averages, the break checks and the GISTEMP cross check, and write static JSON files. The website reads only those files and makes no request to NASA from your browser, so the results shown here come from the same files. The scripts, the data files and the hand check files are in the project repository. No outside fonts, images or scripts are loaded.</P>
+      <P>Python scripts in the lab folder download the NASA data, compute the yearly series, the trends, the national averages, the break checks and the GISTEMP cross check, and write static JSON files. The website reads only those files and makes no request to NASA from your browser, so the results shown here come from the same files. The scripts, the data files and the hand check files are in the <L href={REPO}>project repository on GitHub</L>, released under the MIT license. No outside fonts, images or scripts are loaded.</P>
+      <p className="mt-3"><a href={REPO} target="_blank" rel="noopener noreferrer" className={BTN_OUT}>View the repository on GitHub</a></p>
 
       <H2 id="references" n={9}>Sources and references</H2>
       <SourcesPanel gist={!!gist} />
@@ -131,7 +132,7 @@ export default function Method({ nat, cells, breaks, gist }: { nat: Nat; cells: 
       </ul>
 
       <p className="mt-10"><a href="#" className={BTN_FILL}>Back to the explorer</a></p>
-      <p className="mt-4 text-sm text-slate-600">Data: NASA POWER (MERRA-2). Built by team GitGoblins for NASA Space Apps Challenge 2026.</p>
+      <p className="mt-4 text-sm text-slate-600">Data: NASA POWER (MERRA-2). Built by team GitGoblins for NASA Space Apps Challenge 2026. <L href={REPO}>Source code on GitHub</L>.</p>
     </main>
   );
 }

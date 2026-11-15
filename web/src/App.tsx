@@ -4,7 +4,7 @@ import CaseFile1 from "./CaseFile1";
 import CaseFile2 from "./CaseFile2";
 import CaseFile3 from "./CaseFile3";
 import TrustPanel from "./TrustPanel";
-import SourcesPanel from "./SourcesPanel";
+import SourcesPanel, { REPO } from "./SourcesPanel";
 import Findings from "./Findings";
 import Method, { BTN_OUT, BTN_FILL } from "./Method";
 import { Term, GLOSS } from "./Term";
@@ -403,7 +403,7 @@ export default function App() {
         <p className="mt-3"><a href="#method" className={BTN_FILL}>Read the method and data</a></p>
       </section>
 
-      <p className="mt-4 text-sm text-slate-600">Data: NASA POWER (MERRA-2). Built by team GitGoblins for NASA Space Apps Challenge 2026.</p>
+      <p className="mt-4 text-sm text-slate-600">Data: NASA POWER (MERRA-2). Built by team GitGoblins for NASA Space Apps Challenge 2026. <a className="text-teal-700 underline" href={REPO} target="_blank" rel="noopener noreferrer">Source code on GitHub</a>.</p>
     </main>
   );
 }

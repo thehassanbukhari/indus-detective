@@ -1,7 +1,7 @@
 import { verdict, type Nat } from "./PmdPanel";
 import { brk, breakKind, breakSentence, type BreaksFile } from "./breaks";
 
-// Recorded test results (Sat 14 Nov, AGENTS.md section 12): synthetic series, 45 years, truth 0.30 per decade.
+// Recorded test results (Sat 14 Nov, the project notes): synthetic series, 45 years, truth 0.30 per decade.
 export const CHECKS = {
   slopeMean: 0.299, truth: 0.3,
   falsePosNoAuto: 0.052, falsePosAuto: 0.08,

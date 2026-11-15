@@ -9,7 +9,7 @@ export type Brk = {
 export type BreaksFile = Record<string, unknown>;
 export const brk = (b: BreaksFile, key: string): Brk | undefined => (key === "synthetic" ? undefined : (b[key] as Brk | undefined));
 
-// Closed rule (AGENTS.md section 12): "one" = at least 75 percent of places break within 1996 to 1999,
+// Closed rule (the project notes): "one" = at least 75 percent of places break within 1996 to 1999,
 // "shared" = otherwise the most common break year holds at least 40 percent of places, else "none".
 export type BreakKind = "one" | "shared" | "none";
 export const breakKind = (k: Brk): BreakKind =>
